@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Minecraft GeoGuessr</title>
+  <link rel="stylesheet" href="mcguessr.css">
+</head>
+<body>
+
+<!-- START SCREEN -->
+<div id="startScreen">
+<div id="leaderboard">
+  <h3>Leaderboard</h3>
+  <div id="leaderboardList"></div>
+</div>
+
+  <!-- LINKS -->
+  <div id="skinBlock">
+    <img id="skinPreview" src="" alt="Skin">
+    <input id="usernameInput" placeholder="Minecraft Username">
+  </div>
+
+  <!-- RECHTS -->
+  <div id="titleBlock">
+    <h1>Minecraft GeoGuessr</h1>
+    <button id="startBtn">Start</button>
+  </div>
+
+</div>
+
+<!-- GAME -->
+<div id="game" style="display:none;">
+
+  <!-- PLAYER UI -->
+  <div id="playerUI">
+    <img id="playerSkin">
+    <span id="playerName"></span>
+  </div>
+
+
+  <!-- Bossbar -->
+  <div id="bossbar">
+    <div id="bossbar-fill"></div>
+  </div>
+
+  <!-- Screenshot -->
+  <img id="screenshot" src="">
+
+  <!-- Map -->
+  <div id="mapContainer">
+    <div id="mapViewport">
+      <div id="mapWrapper">
+        <img id="map" src="images/map.png">
+        <img id="marker" src="images/Map_X.png">
+        <img id="realMarker" src="images/Map_real.png">
+        <div id="line"></div>
+      </div>
+    </div>
+
+    <button id="guessBtn">Guess</button>
+  </div>
+
+  <!-- UI -->
+  <p id="result"></p>
+  <p id="coords"></p>
+
+</div>
+
+<script src="mcguessr.js"></script>
+</body>
+</html>
