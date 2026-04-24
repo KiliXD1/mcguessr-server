@@ -21,6 +21,7 @@ const usernameInput = document.getElementById("usernameInput");
 const skinPreview = document.getElementById("skinPreview");
 const playerSkin = document.getElementById("playerSkin");
 const playerNameEl = document.getElementById("playerName");
+const API = "https://mcguessr-server.onrender.com";
 let round = 0;
 let totalScore = 0;
 const maxRounds = 3;
@@ -62,7 +63,7 @@ startBtn.onclick = () => {
 //Leaderboard
 async function loadLeaderboard() {
   try {
-    const res = await fetch("http://localhost:3000/leaderboard");
+    const res = await fetch("https://mcguessr-server.onrender.com/leaderboard");
     const data = await res.json();
 
     const list = document.getElementById("leaderboardList");
@@ -128,7 +129,17 @@ const locations = [
   { image: "images/bild17.png", x: 0.471, y: 0.456 },
   { image: "images/bild18.png", x: 0.167, y: 0.321 },
   { image: "images/bild19.png", x: 0.653, y: 0.289 },
-  { image: "images/bild20.png", x: 0.520, y: 0.040 }
+  { image: "images/bild20.png", x: 0.520, y: 0.040 },
+  { image: "images/bild21.png", x: 0.479, y: 0.138 },
+  { image: "images/bild22.png", x: 0.330, y: 0.071 },
+  { image: "images/bild23.png", x: 0.208, y: 0.584 },
+  { image: "images/bild24.png", x: 0.849, y: 0.123 },
+  { image: "images/bild25.png", x: 0.926, y: 0.479 },
+  { image: "images/bild26.png", x: 0.059, y: 0.835 },
+  { image: "images/bild27.png", x: 0.087, y: 0.576 },
+  { image: "images/bild28.png", x: 0.314, y: 0.338 },
+  { image: "images/bild29.png", x: 0.319, y: 0.868 },
+  { image: "images/bild30.png", x: 0.643, y: 0.711 }
 
 ];
 
@@ -393,7 +404,7 @@ mapViewport.addEventListener("wheel", (e) => {
 function sendScore() {
   console.log("Sende Score:", playerName, totalScore); // 👈 DEBUG
 
-  fetch("http://localhost:3000/score", {
+  fetch("https://mcguessr-server.onrender.com/score", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
