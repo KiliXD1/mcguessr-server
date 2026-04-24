@@ -6,6 +6,14 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => console.log("Server läuft auf " + PORT));
+
+app.get("/", (req, res) => {
+  res.send("Server läuft!");
+});
+
 const FILE = "leaderboard.json";
 
 // GET leaderboard
