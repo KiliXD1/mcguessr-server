@@ -1,3 +1,13 @@
+
+app.get("/", (req, res) => {
+  res.send("Server läuft!");
+});
+
+app.get("/leaderboard", (req, res) => {
+  const data = JSON.parse(fs.readFileSync("leaderboard.json"));
+  res.json(data);
+});
+
 const express = require("express");
 const fs = require("fs");
 const cors = require("cors");
@@ -10,9 +20,6 @@ const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => console.log("Server läuft auf " + PORT));
 
-app.get("/", (req, res) => {
-  res.send("Server läuft!");
-});
 
 const FILE = "leaderboard.json";
 
