@@ -1,26 +1,19 @@
-
-app.get("/", (req, res) => {
-  res.send("Server läuft!");
-});
-
-app.get("/leaderboard", (req, res) => {
-  const data = JSON.parse(fs.readFileSync("leaderboard.json"));
-  res.json(data);
-});
-
 const express = require("express");
 const fs = require("fs");
 const cors = require("cors");
 
 const app = express();
+
+// Middleware
 app.use(cors());
 app.use(express.json());
 
-const PORT = process.env.PORT || 3000;
+// Test Route
+app.get("/", (req, res) => {
+  res.send("Server läuft!");
+});
 
-app.listen(PORT, () => console.log("Server läuft auf " + PORT));
-
-
+// Datei
 const FILE = "leaderboard.json";
 
 // GET leaderboard
@@ -45,4 +38,9 @@ app.post("/score", (req, res) => {
   res.sendStatus(200);
 });
 
-app.listen(3000, () => console.log("Server läuft"));
+// WICHTIG für Render
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log("Server läuft auf Port " + PORT);
+});
