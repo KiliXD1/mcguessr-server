@@ -21,6 +21,7 @@ const usernameInput = document.getElementById("usernameInput");
 const skinPreview = document.getElementById("skinPreview");
 const playerSkin = document.getElementById("playerSkin");
 const playerNameEl = document.getElementById("playerName");
+const SERVER_URL = "https://mcguessr-server.onrender.com";
 const API = "https://mcguessr-server.onrender.com";
 let round = 0;
 let totalScore = 0;
@@ -62,33 +63,29 @@ startBtn.onclick = () => {
 
 //Leaderboard
 async function loadLeaderboard() {
-  try {
-    const res = await fetch("https://mcguessr-server.onrender.com/leaderboard");
-    const data = await res.json();
+  const res = await fetch(SERVER_URL + "/leaderboard");
+  const data = await res.json();
 
-    const list = document.getElementById("leaderboardList");
-    list.innerHTML = "";
+  const board = document.getElementById("leaderboard");
+  board.innerHTML = "";
 
-    data.forEach((player, index) => {
-      const entry = document.createElement("div");
+  data.forEach((entry, index) => {
+    let medal = "";
 
-      if (index === 0) entry.className = "lb-entry gold";
-      else if (index === 1) entry.className = "lb-entry silver";
-      else if (index === 2) entry.className = "lb-entry bronze";
-      else entry.className = "lb-entry";
+    if (index === 0) medal = "🥇";
+    else if (index === 1) medal = "🥈";
+    else if (index === 2) medal = "🥉";
 
-      entry.innerHTML = `
-        <img src="https://minotar.net/helm/${player.name}/40.png">
-        <span>#${index + 1} ${player.name}</span>
-        <b>${player.score}</b>
-      `;
+    const skin = `https://minotar.net/helm/${entry.name}/30.png`;
 
-      list.appendChild(entry);
-    });
-
-  } catch (err) {
-    console.log("Leaderboard Server offline ❌", err);
-  }
+    board.innerHTML += `
+      <div>
+        ${medal} 
+        <img src="${skin}" style="vertical-align:middle">
+        ${entry.name} - ${entry.score}
+      </div>
+    `;
+  });
 }
 
 let maxTime = 30;
@@ -366,7 +363,7 @@ guessBtn.onclick = () => {
 function endGame() {
   result.innerText = `GESAMT: ${totalScore} Punkte`;
 
-  sendScore(); 
+  sendScore(playerName, totalScore); 
 
   setTimeout(() => {
     round = 0;
@@ -374,9 +371,8 @@ function endGame() {
 
     startScreen.style.display = "block";
     game.style.display = "none";
-    setTimeout(() => {
-  loadLeaderboard();
-}, 1000);
+
+    loadLeaderboard();
   }, 4000);
 }
 
@@ -400,6 +396,18 @@ mapViewport.addEventListener("wheel", (e) => {
 
   updateTransform();
 });
+
+async function sendScore(name, score) {
+  console.log("Sende Score:", name, score);
+
+  await fetch(SERVER_URL + "/score", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ name, score })
+  });
+}
 
 function sendScore() {
   console.log("Sende Score:", playerName, totalScore); // 👈 DEBUG
