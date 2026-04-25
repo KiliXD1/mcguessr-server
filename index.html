@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -10,7 +9,8 @@
 
 <!-- START SCREEN -->
 <div id="startScreen">
-<div id="leaderboardBox">
+  
+<div id="leaderboard">
   <h3>Leaderboard</h3>
   <div id="leaderboardList"></div>
 </div>
@@ -24,7 +24,8 @@
   <!-- RECHTS -->
   <div id="titleBlock">
     <h1>Minecraft GeoGuessr</h1>
-    <button id="startBtn">Start</button>
+    <button id="startBtn">Singleplayer</button>
+    <button id="multiplayerBtn">Multiplayer</button>
   </div>
 
 </div>
@@ -32,6 +33,7 @@
 <!-- GAME -->
 <div id="game" style="display:none;">
 
+  <div id="bigScore"></div>
   <!-- PLAYER UI -->
   <div id="playerUI">
     <img id="playerSkin">
@@ -69,3 +71,4 @@
 
 <script src="mcguessr.js"></script>
 </body>
+</html>

@@ -12,7 +12,7 @@ const line = document.getElementById("line");
 const mapContainer = document.getElementById("mapContainer");
 
 const bossbarFill = document.getElementById("bossbar-fill");
-
+const multiplayerBtn = document.getElementById("multiplayerBtn");
 const startBtn = document.getElementById("startBtn");
 const startScreen = document.getElementById("startScreen");
 const game = document.getElementById("game");
@@ -37,6 +37,7 @@ usernameInput.addEventListener("input", () => {
   // 🔥 HEAD render (perfekt für UI)
 
 skinPreview.src = `https://minotar.net/helm/${name}/100.png`;});
+
 startBtn.onclick = () => {
   const name = usernameInput.value.trim();
 
@@ -61,28 +62,43 @@ startBtn.onclick = () => {
   loadRandomLocation();
 };
 
+  multiplayerBtn.onclick = () => {
+  const name = usernameInput.value.trim();
+
+    alert("No Multiplayer avaible at this time");
+
+}
 //Leaderboard
 async function loadLeaderboard() {
   const res = await fetch(SERVER_URL + "/leaderboard");
   const data = await res.json();
 
-  const board = document.getElementById("leaderboard");
+  const board = document.getElementById("leaderboardList");
   board.innerHTML = "";
 
   data.forEach((entry, index) => {
     let medal = "";
+    let extraClass = "";
 
-    if (index === 0) medal = "🥇";
-    else if (index === 1) medal = "🥈";
-    else if (index === 2) medal = "🥉";
+    if (index === 0) {
+      medal = "🥇";
+      extraClass = "gold";
+    } else if (index === 1) {
+      medal = "🥈";
+      extraClass = "silver";
+    } else if (index === 2) {
+      medal = "🥉";
+      extraClass = "bronze";
+    }
 
     const skin = `https://minotar.net/helm/${entry.name}/30.png`;
 
     board.innerHTML += `
-      <div>
-        ${medal} 
-        <img src="${skin}" style="vertical-align:middle">
-        ${entry.name} - ${entry.score}
+      <div class="lb-entry ${extraClass}">
+        <span class="rank">${medal}</span>
+        <img class="lb-skin" src="${skin}">
+        <span class="name">${entry.name}</span>
+        <span class="score">${entry.score}</span>
       </div>
     `;
   });
@@ -423,3 +439,7 @@ function sendScore() {
     })
   });
 }
+
+window.onload = () => {
+  loadLeaderboard();
+};
