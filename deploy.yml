@@ -1,0 +1,35 @@
+trigger:
+- master
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+- task: NodeTool@0
+  displayName: 'Use Node.js 20.x'
+  inputs:
+    versionSpec: '20.x'
+
+- script: npm ci
+  displayName: 'npm install'
+
+- task: CopyFiles@2
+  displayName: 'Copy files to staging'
+  inputs:
+    Contents: |
+      server.js
+      package.json
+      package-lock.json
+      index.html
+      mcguessr.js
+      mcguessr.css
+      leaderboard.json
+      images/**
+    TargetFolder: '$(Build.ArtifactStagingDirectory)'
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Artifact'
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    ArtifactName: 'drop'
+  condition: succeededOrFailed()

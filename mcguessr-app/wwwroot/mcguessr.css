@@ -22,6 +22,7 @@ button {
   color: var(--green);
   box-shadow: inset 0 0 10px #c1c7c466, 0 0 9px 3px rgba(255, 255, 255, 0.1);
   background: var(--bg) center/cover no-repeat;
+  touch-action: manipulation;
 }
 
 button:hover {
@@ -278,6 +279,7 @@ h1 {
   box-shadow: inset 2px 5px 10px rgb(255, 255, 255);
   color: #e0f4ea;
   text-align: center;
+  touch-action: manipulation;
 }
 
 #titleBlock {
@@ -372,9 +374,9 @@ h1 {
   image-rendering: pixelated;
 }
 
-.rank {
-  width: 25px;
-}
+.rank { width: 25px; }
+.name { flex: 1; }
+.score { font-weight: bold; }
 
 .name {
   flex: 1;
@@ -486,11 +488,11 @@ h1 {
   background: url("images/Button-yt.png") center/cover no-repeat;
 }
 
-#startBtn { --bg: url("images/Button.jpg"); }
+#startBtn   { --bg: url("images/Button.jpg"); }
 #multiplayerBtn { --bg: url("images/Button-multi.png"); }
-#wieBtn { --bg: url("images/Button-wie.jpg"); }
-#guessBtn { --bg: url("images/Button.jpg"); }
-#backBtn { --bg: url("images/Button.jpg"); }
+#wieBtn     { --bg: url("images/Button-wie.jpg"); }
+#guessBtn   { --bg: url("images/Button.jpg"); }
+#backBtn    { --bg: url("images/Button.jpg"); }
 
 #twitchLink {
   margin-top: 20px;
@@ -584,31 +586,49 @@ h1 {
   vertical-align: middle;
 }
 
+/* ==================== MOBILE ==================== */
 @media (max-width: 768px) {
-  #mapContainer.fullscreen #mapViewport {
-  width: 95vw;
-  height: 60vh;
+  h1 {
+    font-size: 38px;
+    margin: 4px;
+    padding: 4px;
+    left: 0;
 }
 
-#mapWrapper {
-  touch-action: none;
+  button {
+    font-size: 20px;
+    padding: 0.6em 1.2em;
 }
 
-#guessBtn {
-  font-size: 24px;
-  padding: 15px;
+  #usernameInput {
+    font-size: 20px;
+    max-width: 260px;
+    margin: 8px;
 }
 
-#playerSkin {
-  width: 50px;
+  /* --- Start screen: stack vertically --- */
+  #startScreen {
+    position: fixed;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 10px 40px;
+    gap: 16px;
 }
 
-#bossbar {
-  width: 80%;
+  .three {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    order: 1;
 }
 
-h1 {
-  font-size: 50px;
+  #Icon {
+    width: 50px;
+    height: 50px;
+    margin-left: 8px;
 }
 
 #finalScore {
@@ -622,38 +642,129 @@ h1 {
 #titleBlock {
   position: static;
   transform: none;
-  width: 100%;
+    width: 90%;
+    gap: 16px;
+    order: 2;
   align-items: center;
+    padding: 10px;
 }
 
 #skinBlock {
   position: static;
   transform: none;
-  width: 100%;
+    width: 90%;
+    order: 3;
+    gap: 12px;
+    padding: 10px;
+  }
+
+  #skinPreview {
+    width: 120px;
+    height: 120px;
+  }
+
+  #creator {
+    position: static;
+    width: 90%;
+    order: 4;
+    padding: 15px;
+  }
+
+  #creator h2 {
+    font-size: 26px;
+  }
+
+  #profilbild {
+    width: 80px;
+    height: 80px;
+  }
+
+  /* --- Game UI --- */
+  #playerSkin {
+    width: 40px;
+  }
+
+  #playerUI {
+    gap: 6px;
+  }
+
+  #bossbar {
+    width: 70%;
+    height: 16px;
 }
 
-#titleBlock {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+  #bigScore {
+    font-size: 28px;
+    padding: 10px 20px;
+    bottom: 80px;
 }
 
-#skinPreview {
-  width: 150px;
-  height: 150px;
+  /* --- Map --- */
+  #mapContainer {
+    bottom: 10px;
+    right: 10px;
 }
 
-@media (max-width: 768px) {
+  /* Disable hover expansion on touch – handled via JS .expanded class */
   #mapContainer:hover #mapViewport {
-    width: 320px;
-    height: 220px;
+    width: 42vw;
+    height: 30vw;
   }
+
+  #mapViewport {
+    width: 42vw;
+    height: 30vw;
+    touch-action: manipulation;
+  }
+
+  /* Tap-to-expand state */
+  #mapContainer.expanded #mapViewport {
+    width: 94vw;
+    height: 65vw;
+  }
+
+  #mapContainer.fullscreen #mapViewport {
+    width: 95vw;
+    height: 65vw;
+  }
+
+  #mapWrapper {
+    touch-action: none;
+  }
+
+  #guessBtn {
+    font-size: 16px;
+    padding: 8px;
+  }
+
+  /* --- End screen --- */
+  #finalScore {
+    font-size: 40px;
+  }
+
+  /* --- Leaderboard in-game --- */
+  #leaderboardBox {
+    right: 2%;
+    top: auto;
+    bottom: 80px;
+    transform: none;
+    padding: 10px;
+    max-width: 140px;
+  }
+
+  .lb-skin {
+    width: 18px;
+    height: 18px;
 }
 
-@media (max-width: 768px) {
-  #mapViewport {
-    width: 90vw;
-    height: 50vh;
+  .lb-entry {
+    font-size: 11px;
+    gap: 4px;
+    padding: 3px;
   }
+
+  .rank {
+    width: 16px;
+    font-size: 11px;
 }
 }
