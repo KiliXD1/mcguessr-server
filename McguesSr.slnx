@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/Common/">
+    <File Path="deploy.yml" />
     <File Path="README.md" />
   </Folder>
   <Project Path="mcguessr-app/McguesSr.csproj" />

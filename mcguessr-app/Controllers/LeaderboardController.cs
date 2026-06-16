@@ -7,13 +7,13 @@ namespace McguesSr.Controllers;
 [ApiController]
 public class LeaderboardController : ControllerBase
 {
-    private readonly LeaderboardService _svc;
-    public LeaderboardController(LeaderboardService svc) => _svc = svc;
+    private readonly ILeaderboardService _svc;
+    public LeaderboardController(ILeaderboardService svc) => _svc = svc;
 
     [HttpGet("/leaderboard")]
     public async Task<IActionResult> Get()
     {
-        var data = await _svc.GetTopTenAsync();
+        var data = await _svc.GetLeaderboardAsync();
         return Ok(data);
     }
 

@@ -30,6 +30,8 @@ let scoreSent = false;
 
   skinPreview.src = "images/default-skin.webp";
 
+const isMobile = () => window.innerWidth <= 768;
+
 document.getElementById("backBtn").onclick = () => {
   document.getElementById("endScreen").style.display = "none";
   startScreen.style.display = "block";
@@ -43,8 +45,10 @@ usernameInput.addEventListener("input", () => {
   const name = usernameInput.value.trim();
 
   if (!name) return;
+  skinPreview.src = `https://minotar.net/helm/${name}/100.png`;
+});
 
-skinPreview.src = `https://minotar.net/helm/${name}/100.png`;});
+skinPreview.src = `https://minotar.net/helm/${name}/100.png`;
 
 startBtn.onclick = () => {
   const name = usernameInput.value.trim();
@@ -75,12 +79,13 @@ startBtn.onclick = () => {
   const name = usernameInput.value.trim();
 
     alert("No Multiplayer avaible at this time");
+};
 
-}
+
 document.getElementById("wieBtn").onclick = function () {
   document.getElementById("popup").style.display = "block";
 };
-//Leaderboard
+
 async function loadLeaderboard() {
   console.log("Loading leaderboard...");
 
@@ -88,6 +93,7 @@ async function loadLeaderboard() {
   const data = await res.json();
 
   const board = document.getElementById("leaderboardList");
+  if (!board) return;
   board.innerHTML = "";
 
   data
@@ -133,15 +139,15 @@ let startY = 0;
 const dragThreshold = 5;
 
 const locations = [
-  { image: "images/bild1.png", x: 0.504, y: 0.494 },
-  { image: "images/bild2.png", x: 0.557, y: 0.220 },
-  { image: "images/bild3.png", x: 0.123, y: 0.431 },
-  { image: "images/bild4.png", x: 0.303, y: 0.233 },
-  { image: "images/bild5.png", x: 0.781, y: 0.368 },
-  { image: "images/bild6.png", x: 0.325, y: 0.987 },
-  { image: "images/bild7.png", x: 0.565, y: 0.978 },
-  { image: "images/bild8.png", x: 0.760, y: 0.871 },
-  { image: "images/bild9.png", x: 0.936, y: 0.814 },
+  { image: "images/bild1.png",  x: 0.504, y: 0.494 },
+  { image: "images/bild2.png",  x: 0.557, y: 0.220 },
+  { image: "images/bild3.png",  x: 0.123, y: 0.431 },
+  { image: "images/bild4.png",  x: 0.303, y: 0.233 },
+  { image: "images/bild5.png",  x: 0.781, y: 0.368 },
+  { image: "images/bild6.png",  x: 0.325, y: 0.987 },
+  { image: "images/bild7.png",  x: 0.565, y: 0.978 },
+  { image: "images/bild8.png",  x: 0.760, y: 0.871 },
+  { image: "images/bild9.png",  x: 0.936, y: 0.814 },
   { image: "images/bild10.png", x: 0.264, y: 0.697 },
   { image: "images/bild11.png", x: 0.458, y: 0.828 },
   { image: "images/bild12.png", x: 0.423, y: 0.299 },
@@ -193,6 +199,7 @@ function loadRandomLocation() {
   currentLocation = locations[Math.floor(Math.random() * locations.length)];
   screenshot.src = currentLocation.image;
   mapContainer.classList.remove("fullscreen");
+  mapContainer.classList.remove("expanded");
 
   // Marker reset
   marker.style.display = "none";
@@ -212,7 +219,7 @@ function loadRandomLocation() {
   // Timer neu starten
   startTimer();
 }
-//nach guess
+
 function drawLine(x1, y1, x2, y2) {
   const mapWidth = map.offsetWidth;
   const mapHeight = map.offsetHeight;
@@ -237,9 +244,7 @@ function drawLine(x1, y1, x2, y2) {
 
   line.style.display = "block";
 
-setTimeout(() => {
-  line.style.opacity = "1";
-}, 10);;
+  setTimeout(() => { line.style.opacity = "1"; }, 10);
 }
 
 function showResult() {
@@ -252,7 +257,7 @@ function showResult() {
 
   // Marker setzen
   realMarker.style.left = (realX * 100) + "%";
-  realMarker.style.top = (realY * 100) + "%";
+  realMarker.style.top  = (realY * 100) + "%";
   realMarker.style.display = "block";
 
   // Linie berechnen
@@ -264,13 +269,12 @@ function showResult() {
 function updateTransform() {
   const vp = mapViewport.getBoundingClientRect();
 
-  const mapWidth = map.offsetWidth * zoom;
+  const mapWidth  = map.offsetWidth  * zoom;
   const mapHeight = map.offsetHeight * zoom;
+  const vpWidth   = vp.width;
+  const vpHeight  = vp.height;
 
-  const vpWidth = vp.width;
-  const vpHeight = vp.height;
-
-  const minX = vpWidth - mapWidth;
+  const minX = vpWidth  - mapWidth;
   const minY = vpHeight - mapHeight;
 
   offsetX = Math.min(0, Math.max(offsetX, minX));
@@ -287,21 +291,29 @@ mapViewport.addEventListener("click", (e) => {
     return;
   }
 
-  const rect = map.getBoundingClientRect();
+  // On mobile: first tap expands the map, second tap places guess
+  if (isMobile() && !mapContainer.classList.contains("expanded") && !mapContainer.classList.contains("fullscreen")) {
+    mapContainer.classList.add("expanded");
+    return;
+  }
 
-  const x = (e.clientX - rect.left) / rect.width;
+  const rect = map.getBoundingClientRect();
+  const x = (e.clientX - rect.left)  / rect.width;
   const y = (e.clientY - rect.top) / rect.height;
 
   guessX = x;
   guessY = y;
 
   marker.style.left = (x * 100) + "%";
-  marker.style.top = (y * 100) + "%";
+  marker.style.top  = (y * 100) + "%";
   marker.style.display = "block";
 
   coords.innerText = `x: ${x.toFixed(3)} | y: ${y.toFixed(3)}`;
+
+  if (isMobile()) mapContainer.classList.remove("expanded");
 });
-// -------------------- Timer --------------------
+
+// -------------------- TIMER --------------------
 function startTimer() {
   clearInterval(timerInterval);
 
@@ -337,15 +349,14 @@ function updateBossbar() {
 function autoSubmit() {
   if (guessX === null) {
     result.innerText = "Not guessed!";
-    setTimeout(() => {
-      loadRandomLocation();
-    }, 1500);
+    setTimeout(() => { loadRandomLocation(); }, 1500);
     return;
   }
 
   guessBtn.click();
 }
-// -------------------- DRAG --------------------
+
+// -------------------- MOUSE DRAG --------------------
 mapWrapper.addEventListener("mousedown", (e) => {
   isDragging = true;
   moved = false;
@@ -362,19 +373,76 @@ window.addEventListener("mousemove", (e) => {
   const dx = e.clientX - startX;
   const dy = e.clientY - startY;
 
-  if (Math.abs(dx) > dragThreshold || Math.abs(dy) > dragThreshold) {
-    moved = true;
-  }
+  if (Math.abs(dx) > dragThreshold || Math.abs(dy) > dragThreshold) moved = true;
 
   offsetX = dx;
   offsetY = dy;
-
   updateTransform();
 });
 
-window.addEventListener("mouseup", () => {
-  isDragging = false;
-});
+window.addEventListener("mouseup", () => { isDragging = false; });
+
+// -------------------- TOUCH DRAG + PINCH ZOOM --------------------
+let touchStartX = 0;
+let touchStartY = 0;
+let lastTouchDist = 0;
+
+function getTouchDist(e) {
+  const dx = e.touches[0].clientX - e.touches[1].clientX;
+  const dy = e.touches[0].clientY - e.touches[1].clientY;
+  return Math.sqrt(dx * dx + dy * dy);
+  }
+
+mapWrapper.addEventListener("touchstart", (e) => {
+  if (e.touches.length === 1) {
+    isDragging = true;
+    moved = false;
+    startX = e.touches[0].clientX - offsetX;
+    startY = e.touches[0].clientY - offsetY;
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+  } else if (e.touches.length === 2) {
+    isDragging = false;
+    lastTouchDist = getTouchDist(e);
+  }
+  e.preventDefault();
+}, { passive: false });
+
+mapWrapper.addEventListener("touchmove", (e) => {
+  if (e.touches.length === 1 && isDragging) {
+    const dx = e.touches[0].clientX - startX;
+    const dy = e.touches[0].clientY - startY;
+
+    if (
+      Math.abs(e.touches[0].clientX - touchStartX) > dragThreshold ||
+      Math.abs(e.touches[0].clientY - touchStartY) > dragThreshold
+    ) moved = true;
+
+  offsetX = dx;
+  offsetY = dy;
+    updateTransform();
+  } else if (e.touches.length === 2) {
+    const dist = getTouchDist(e);
+    const factor = dist / lastTouchDist;
+
+    const rect = mapViewport.getBoundingClientRect();
+    const midX = ((e.touches[0].clientX + e.touches[1].clientX) / 2) - rect.left;
+    const midY = ((e.touches[0].clientY + e.touches[1].clientY) / 2) - rect.top;
+
+    const oldZoom = zoom;
+    zoom = Math.min(Math.max(zoom * factor, 0.185), 5);
+
+    offsetX = midX - ((midX - offsetX) * (zoom / oldZoom));
+    offsetY = midY - ((midY - offsetY) * (zoom / oldZoom));
+
+  updateTransform();
+    lastTouchDist = dist;
+    moved = true;
+  }
+  e.preventDefault();
+}, { passive: false });
+
+mapWrapper.addEventListener("touchend", () => { isDragging = false; });
 
 // -------------------- SUBMIT --------------------
 guessBtn.onclick = () => {
@@ -389,8 +457,7 @@ guessBtn.onclick = () => {
   totalScore += score;
   round++;
 
-  result.innerText =
-    `Runde ${round}/3 | Punkte: ${score}`;
+  result.innerText = `Runde ${round}/3 | Punkte: ${score}`;
 
 showResult();
 
@@ -400,6 +467,7 @@ bigScore.style.display = "block";
 setTimeout(() => {
 
   mapContainer.classList.remove("fullscreen");
+    mapContainer.classList.remove("expanded");
   realMarker.style.display = "none";
   line.style.display = "none";
 
@@ -411,7 +479,7 @@ setTimeout(() => {
 
 }, 5000);
 };
-//ENDE
+
 function endGame() {
   sendScore(playerName, totalScore);
 
@@ -427,17 +495,15 @@ function endGame() {
 }
 
 async function sendScore(name, score) {
-  console.log("Sende Score an Render:", name, score);
-
+  console.log("Sende Score:", name, score);
   await fetch(`${SERVER_URL}/leaderboard`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ name, score })
   });
 }
-// -------------------- ZOOM --------------------
+
+// -------------------- ZOOM (WHEEL) --------------------
 mapViewport.addEventListener("wheel", (e) => {
   e.preventDefault();
 
@@ -448,8 +514,7 @@ mapViewport.addEventListener("wheel", (e) => {
 
   const zoomFactor = 1.1;
   const oldZoom = zoom;
-
-  zoom *= (e.deltaY < 0) ? zoomFactor : (1 / zoomFactor);
+  zoom *= (e.deltaY < 0) ? 1.1 : (1 / 1.1);
   zoom = Math.min(Math.max(zoom, 0.185), 5);
 
   offsetX = mouseX - ((mouseX - offsetX) * (zoom / oldZoom));
