@@ -1,10 +1,7 @@
-using McguesSr.Services;
-
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers()
     .AddJsonOptions(o => o.JsonSerializerOptions.PropertyNamingPolicy =
         System.Text.Json.JsonNamingPolicy.CamelCase);
-builder.Services.AddSingleton<LeaderboardService>();
 
 var app = builder.Build();
 
