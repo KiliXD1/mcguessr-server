@@ -4,6 +4,11 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <!-- Verhindert, dass der Server vorkomprimierte (gzip) Snapshots von
+         wwwroot-Dateien ausliefert, die nach einer Bearbeitung ohne Rebuild
+         veraltet sind - sonst kommen Änderungen an index.html/css/js beim
+         Browser scheinbar "nicht an". -->
+    <CompressionEnabled>false</CompressionEnabled>
   </PropertyGroup>
 
 </Project>
