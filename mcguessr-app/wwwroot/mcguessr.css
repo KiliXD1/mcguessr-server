@@ -15,7 +15,8 @@ button {
   font-family: inherit;
   border-radius: 0.6em;
   overflow: hidden;
-  transition: all 0.3s;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(.22,1,.36,1), box-shadow 0.25s ease, color 0.25s ease;
   line-height: 1.4em;
   border: 2px solid var(--green);
   background: linear-gradient(to right, rgba(255, 255, 255, 0.1) 2%, transparent 40%,transparent 60% , rgb(254, 254, 254) 100%);
@@ -26,7 +27,13 @@ button {
 
 button:hover {
   color: #3634bc;
-  box-shadow: inset 0 0 10px rgba(125, 153, 255, 0.6), 0 0 9px 3px rgba(117, 164, 226, 0.2);
+  transform: translateY(-9px) scale(1.08);
+  box-shadow: inset 0 0 14px rgba(125, 153, 255, 0.7), 0 18px 30px rgba(0, 0, 0, 0.45), 0 0 16px 5px rgba(117, 164, 226, 0.4);
+}
+
+button:active {
+  transform: translateY(-2px) scale(0.9);
+  transition: transform 0.1s ease;
 }
 
 button:before {
@@ -36,7 +43,7 @@ button:before {
   width: 4em;
   height: 100%;
   top: 0;
-  transition: transform .4s ease-in-out;
+  transition: transform .5s cubic-bezier(.22,1,.36,1);
   background: linear-gradient(to right, transparent 1%, rgba(27, 253, 156, 0.1) 40%,rgba(27, 253, 156, 0.1) 60% , transparent 100%);
 }
 
@@ -44,11 +51,57 @@ button:hover:before {
   transform: translateX(15em);
 }
 
+/* Guess-Button pulsiert auffällig, sobald ein Tipp auf der Karte gesetzt ist */
+#guessBtn.ready {
+  animation: guessPulse 1s ease-in-out infinite;
+}
+
+@keyframes guessPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: inset 0 0 10px #c1c7c466, 0 0 9px 3px rgba(255, 255, 255, 0.1);
+  }
+  50% {
+    transform: scale(1.06);
+    box-shadow: inset 0 0 22px rgba(125, 153, 255, 0.9), 0 0 36px 10px rgba(117, 164, 226, 0.8);
+  }
+}
+
 #startScreen {
   position: fixed;
   width: 100vw;
   height: 100vh;
   background: url("images/screenshot.jpg") center/cover no-repeat;
+  animation: fadeIn 0.8s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+#game {
+  animation: fadeIn 0.6s ease;
+}
+
+/* Menü-Buttons fahren nach dem Einblenden noch einmal deutlich sichtbar hoch.
+   Auf den Buttons selbst statt auf #titleBlock/#skinBlock, weil deren eigene
+   transform (Zentrierung per translate(-50%,-50%)) sonst überschrieben würde. */
+#titleBlock button {
+  animation: slideUpFade 0.6s cubic-bezier(.22,1,.36,1) backwards;
+}
+
+#titleBlock button:nth-of-type(1) { animation-delay: 0.1s; }
+#titleBlock button:nth-of-type(2) { animation-delay: 0.2s; }
+#titleBlock button:nth-of-type(3) { animation-delay: 0.3s; }
+
+#skinBlock {
+  animation: fadeIn 0.7s 0.15s ease backwards;
+}
+
+@keyframes slideUpFade {
+  0% { opacity: 0; transform: translateY(50px); }
+  100% { opacity: 1; transform: translateY(0); }
 }
 
 h1 {
@@ -95,7 +148,7 @@ h1 {
   border: 2px solid white;
   position: relative;
   background: transparent;
-  transition: all 0.25s ease;
+  transition: width 0.25s ease, height 0.25s ease;
 }
 
 #mapWrapper {
@@ -122,6 +175,13 @@ h1 {
   position: absolute;
   transform: translate(-50%, -50%);
   display: none;
+  animation: markerPop 0.5s cubic-bezier(.34,1.56,.64,1);
+}
+
+@keyframes markerPop {
+  0% { transform: translate(-50%, -50%) scale(0) rotate(-45deg); opacity: 0; }
+  60% { transform: translate(-50%, -50%) scale(1.6) rotate(10deg); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(1) rotate(0deg); }
 }
 
 /* Bossbar */
@@ -143,14 +203,7 @@ h1 {
   height: 100%;
   width: 100%;
   background: linear-gradient(to right, #a000ff, #ff00ff);
-  transition: width 1s linear;
-}
-
-#coords {
-  position: fixed;
-  top: 1000px;
-  left: 20px;
-  font-size: 18px;
+  transition: width 1s linear, background 0.4s ease;
 }
 
 #guessBtn {
@@ -165,11 +218,13 @@ h1 {
   position: absolute;
   transform: translate(-50%, -50%);
   display: none;
+  animation: markerPop 0.55s 0.15s cubic-bezier(.34,1.56,.64,1) backwards;
 }
 
 #line {
   position: absolute;
   height: 4px;
+  width: 0;
 
   background: linear-gradient(90deg, #ff0000, #e45151);
 
@@ -183,14 +238,14 @@ h1 {
   pointer-events: none;
 
   opacity: 0;
-  transition: opacity 0.3s ease;
-  animation: pulseline 1.5s infinite;
+  transition: opacity 1.2s ease, width 1.4s cubic-bezier(.22,1,.36,1);
+  animation: pulseLine 1.5s infinite;
 }
 
 @keyframes pulseLine {
-  0% { box-shadow: 0 0 5px rgba(255, 0, 0, 0.6); }
-  50% { box-shadow: 0 0 20px rgb(255, 58, 58); }
-  100% { box-shadow: 0 0 5px rgba(243, 4, 4, 0.6); }
+  0% { box-shadow: 0 0 6px rgba(255, 0, 0, 0.6); }
+  50% { box-shadow: 0 0 32px 4px rgb(255, 58, 58); }
+  100% { box-shadow: 0 0 6px rgba(243, 4, 4, 0.6); }
 }
 
 /* große Map nach Guess */
@@ -198,6 +253,8 @@ h1 {
   position: fixed;
   top: 50%;
   left: 50%;
+  bottom: auto;
+  right: auto;
   transform: translate(-50%, -50%);
 
   width: auto;
@@ -316,87 +373,11 @@ h1 {
   height: 300px;
   image-rendering: pixelated;
   border-radius: 8px;
+  transition: transform 0.25s cubic-bezier(.22,1,.36,1);
 }
 
-#leaderboard {
-  position: absolute;
-  right: 10%;
-  top: 5%;
-  width: 500px;
-
-  background: rgba(0,0,0,0.6);
-  padding: 30px;
-  border-radius: 10px;
-
-  z-index: 5;
-}
-
-#leaderboard h2 {
-  margin-top: 0;
-  text-align: center;
-  font-size: 50px;
-}
-
-#leaderboardList {
-  font-size: 34px;
-}
-
-#leaderboardBox {
-  position: fixed;
-  right: 10%;
-  top: 50%;
-  transform: translateY(-50%);
-  background: rgba(0,0,0,0.7);
-  padding: 30px;
-  border-radius: 20px;
-}
-
-.lb-entry {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px;
-  border-radius: 6px;
-  margin-bottom: 5px;
-  background: rgba(255,255,255,0.05);
-  transition: transform 0.15s;
-}
-
-.lb-entry:hover {
-  transform: scale(1.06);
-}
-
-.lb-skin {
-  width: 34px;
-  height: 34px;
-  image-rendering: pixelated;
-}
-
-.rank {
-  width: 25px;
-}
-
-.name {
-  flex: 1;
-}
-
-.score {
-  font-weight: bold;
-}
-
-.gold {
-  background: linear-gradient(90deg, #ffd70033, #ffd70088);
-  border: 1px solid gold;
-}
-
-.silver {
-  background: linear-gradient(90deg, #c0c0c033, #c0c0c088);
-  border: 1px solid silver;
-}
-
-.bronze {
-  background: linear-gradient(90deg, #cd7f3233, #cd7f3288);
-  border: 1px solid #cd7f32;
+#skinPreview:hover {
+  transform: scale(1.06) rotate(-1deg);
 }
 
 #bigScore {
@@ -416,25 +397,36 @@ h1 {
   display: none;
 
   text-shadow: 0 0 20px rgba(0,0,0,0.8);
-  animation: pop 0.4s ease;
+  animation: bigScorePop 0.7s cubic-bezier(.34,1.56,.64,1);
 }
 
-@keyframes pop {
-  0% { transform: translateX(-50%) scale(0.5); opacity: 0; }
-  100% { transform: translateX(-50%) scale(1); opacity: 1; }
+@keyframes bigScorePop {
+  0% { transform: translateX(-50%) scale(0.2) rotate(-8deg); opacity: 0; }
+  55% { transform: translateX(-50%) scale(1.35) rotate(4deg); opacity: 1; }
+  100% { transform: translateX(-50%) scale(1) rotate(0deg); }
 }
 
 #popup {
   position: fixed;
-  top: 120%;
+  top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: rgba(0,0,0,0.8);
+  min-width: 340px;
+  text-align: center;
+  background: rgba(10,10,15,0.95);
+  border: 2px solid rgba(255,255,255,0.25);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.6);
   padding: 30px;
   border-radius: 12px;
   z-index: 9999;
   display: none;
   text-decoration: none;
+  animation: popIn 0.5s cubic-bezier(.34,1.56,.64,1);
+}
+
+@keyframes popIn {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+  100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 }
 
 #creator {
@@ -549,6 +541,7 @@ h1 {
   align-items: center;
   justify-content: center;
   z-index: 999;
+  animation: fadeIn 0.4s ease;
 }
 
 #endBox {
@@ -556,6 +549,12 @@ h1 {
   background: transparent;
   padding: 40px;
   border-radius: 15px;
+  animation: endBoxPop 0.7s 0.1s cubic-bezier(.34,1.56,.64,1) backwards;
+}
+
+@keyframes endBoxPop {
+  0% { transform: scale(0.6); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
 }
 
 #finalScore {
@@ -564,12 +563,13 @@ h1 {
   margin: 20px 0;
   color: gold;
   text-shadow: 0 0 20px gold;
-  animation: pop 0.5s ease;
+  animation: finalScorePop 0.8s 0.3s cubic-bezier(.34,1.56,.64,1) backwards;
 }
 
-@keyframes pop {
-  0% { transform: scale(0.5); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
+@keyframes finalScorePop {
+  0% { transform: scale(0.2) rotate(-10deg); opacity: 0; }
+  55% { transform: scale(1.3) rotate(5deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); }
 }
 
 #Icon {
