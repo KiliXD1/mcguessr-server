@@ -4,44 +4,60 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Minecraft GeoGuessr</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="mcguessr.css">
 </head>
 <body>
 
 <!-- START SCREEN -->
 <div id="startScreen">
-  
-<div id="creator">
-  <h2>The Creator</h2>  
-    <img src="images/Profilbild.png" alt="Kilior" id="profilbild">
-  <a href="https://www.youtube.com/@kilior-yt" target="_blank" id="youtubeLink">YouTube</a>
-  <a href="https://www.twitch.tv/kilioryt" target="_blank" id="twitchLink">Twitch</a>
-  <a href="https://discord.gg/wCfe2PkcW6" target="_blank" id="dcLink">Discord</a>
 
-
-</div>
-
-  <!-- LINKS -->
-  <div id="skinBlock">
-    <img id="skinPreview" src="" alt="Skin">
-    <input id="usernameInput" placeholder="Minecraft Username">
+ <div class="page">
+  <div class="hero">
+    <img src="images/logo.png" alt="Earth" id="Icon">
+    <h1>Minecraft GeoGuessr</h1>
   </div>
-<div class="three">
- 
-     <img src="images/logo.png" alt="Earth" id="Icon">
-     <h1>Minecraft GeoGuessr</h1>
-</div>
-  <!-- RECHTS -->
-  <div id="titleBlock">
-    <button id="startBtn">Singleplayer</button>
-    <button id="multiplayerBtn">Multiplayer</button>
-    <button id="wieBtn">How to Play</button>
-<div id="popup">
-  <a href="https://www.youtube.com/@kilior-yt" target="_blank" id="youtubeLink">YouTube-Video</a>
-  <br><br>
-  <button onclick="document.getElementById('popup').style.display='none'">Close</button>
-</div>
+
+  <div class="content">
+    <!-- MENÜ -->
+    <div id="titleBlock">
+      <button id="startBtn">Singleplayer</button>
+      <button id="multiplayerBtn">Multiplayer</button>
+      <button id="wieBtn">How to Play</button>
+      <div id="popup">
+        <h2>How to Play</h2>
+        <p>Errate den Standort im Minecraft-Screenshot auf der Karte. Je näher dein Tipp, desto mehr Punkte!</p>
+        <a href="https://www.youtube.com/@kilior-yt" target="_blank" class="social-link yt">YouTube-Video</a>
+        <button id="popupCloseBtn">Close</button>
+      </div>
+    </div>
+
+    <!-- Leaderboard + Spieler-Karte + Creator, jede Box in ihrer natürlichen Höhe -->
+    <div class="right-col">
+      <div id="leaderboardHome" class="card leaderboard-card">
+        <h2>Leaderboard</h2>
+        <div id="leaderboardListHome" class="leaderboardList"></div>
+      </div>
+
+      <div id="skinBlock" class="card">
+        <img id="skinPreview" src="" alt="Skin">
+        <input id="usernameInput" placeholder="Minecraft Username">
+      </div>
+
+      <div id="creator">
+        <img src="images/Profilbild.png" alt="Kilior" id="profilbild">
+        <span id="creatorLabel">The Creator</span>
+        <div class="creator-links">
+          <a href="https://www.youtube.com/@kilior-yt" target="_blank" class="social-link yt">YouTube</a>
+          <a href="https://www.twitch.tv/kilioryt" target="_blank" class="social-link twitch">Twitch</a>
+          <a href="https://discord.gg/wCfe2PkcW6" target="_blank" class="social-link discord">Discord</a>
+        </div>
+      </div>
+    </div>
   </div>
+ </div>
 
 </div>
 
@@ -88,6 +104,11 @@
   <div id="endBox">
     <h1>Game Over</h1>
     <div id="finalScore"></div>
+    <div id="finalRank" style="display:none;"></div>
+    <div id="leaderboardBox" class="card leaderboard-card">
+      <h2>Leaderboard</h2>
+      <div id="leaderboardListEnd" class="leaderboardList"></div>
+    </div>
     <button id="backBtn">Zurück zum Menü</button>
   </div>
 </div>

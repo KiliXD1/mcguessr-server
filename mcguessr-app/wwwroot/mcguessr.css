@@ -8,19 +8,20 @@ body {
 
 button {
   --green: #ffffff;
-  font-size: 50px;
-  padding: 0.7em 2.7em;
-  letter-spacing: 0.06em;
+  font-family: "Press Start 2P", "Arial", sans-serif;
+  font-size: 16px;
+  padding: 1.1em 1.5em;
+  letter-spacing: 0.02em;
   position: relative;
-  font-family: inherit;
   border-radius: 0.6em;
   overflow: hidden;
   cursor: pointer;
   transition: transform 0.2s cubic-bezier(.22,1,.36,1), box-shadow 0.25s ease, color 0.25s ease;
-  line-height: 1.4em;
+  line-height: 1.6em;
   border: 2px solid var(--green);
   background: linear-gradient(to right, rgba(255, 255, 255, 0.1) 2%, transparent 40%,transparent 60% , rgb(254, 254, 254) 100%);
   color: var(--green);
+  text-shadow: 2px 2px 0 rgba(0,0,0,0.65);
   box-shadow: inset 0 0 10px #c1c7c466, 0 0 9px 3px rgba(255, 255, 255, 0.1);
   background: var(--bg) center/cover no-repeat;
 }
@@ -69,10 +70,114 @@ button:hover:before {
 
 #startScreen {
   position: fixed;
+  inset: 0;
   width: 100vw;
   height: 100vh;
   background: url("images/screenshot.jpg") center/cover no-repeat;
   animation: fadeIn 0.8s ease;
+  overflow-y: auto;
+}
+
+/* Nur noch neutrale Wrapper - die eigentliche Positionierung passiert wie im
+   Original per absoluter Platzierung der einzelnen Blöcke, damit sie nah an
+   die Bildschirmränder rücken statt in einer schmalen, zentrierten Box zu
+   verschwinden. */
+.page,
+.content {
+  display: contents;
+}
+
+/* Dezenter vertikaler Schleier statt starkem diagonalem Gradient - der
+   Minecraft-Screenshot soll an den Seiten sichtbar bleiben statt fast
+   schwarz zu wirken. */
+#startScreen::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(8,10,20,0.55), rgba(8,10,20,0.15) 30%, rgba(8,10,20,0.15) 70%, rgba(8,10,20,0.6));
+  z-index: -1;
+}
+
+.hero {
+  position: absolute;
+  top: 6%;
+  left: 5%;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  min-width: 0;
+}
+
+.hero #Icon {
+  flex-shrink: 0;
+  width: 130px;
+  height: 130px;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 6px 14px rgba(0,0,0,0.6));
+}
+
+.hero h1 {
+  margin: 0;
+  font-family: "Press Start 2P", "impact", sans-serif;
+  font-size: clamp(22px, 3.6vw, 46px);
+  line-height: 1.5;
+  color: #fff;
+  text-shadow: 0 0 14px rgba(120,180,255,0.6), 3px 3px 0 rgba(0,0,0,0.6);
+  white-space: nowrap;
+}
+
+/* Karten-Look, gemeinsam für Skin-Vorschau, Leaderboard und Creator-Box */
+.card {
+  background: linear-gradient(160deg, rgba(25,25,35,0.88), rgba(10,10,18,0.92));
+  border: 2px solid rgba(255,255,255,0.14);
+  border-radius: 18px;
+  padding: 26px 28px;
+  box-shadow: 0 14px 34px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+.card h2 {
+  margin: 0 0 18px;
+  font-family: "Press Start 2P", sans-serif;
+  font-size: 20px;
+  text-align: center;
+  color: #ffe9a8;
+  text-shadow: 0 0 10px rgba(255,215,110,0.4);
+}
+
+/* Rechte Spalte: Leaderboard, Spieler-Karte und Creator-Box gestapelt,
+   jede in ihrer eigenen natürlichen Höhe (kein Stretch) - genau dort
+   positioniert, wo im Original die Creator-Box saß (rechts oben), Creator
+   selbst rutscht dafür ans Ende der Spalte. */
+.right-col {
+  position: absolute;
+  top: 6%;
+  right: 6%;
+  width: 560px;
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+}
+
+/* Creator-Credits als schmale Box statt einer eigenen großen Karte -
+   flex-wrap, damit die Links bei Bedarf umbrechen statt rechts aus der
+   Box zu laufen (passierte, als Schrift/Abstände vergrößert wurden). */
+#creator {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 18px;
+  padding: 16px 22px;
+  background: rgba(10,10,18,0.55);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 14px;
+  box-sizing: border-box;
+}
+
+#creatorLabel {
+  font-family: "Press Start 2P", sans-serif;
+  font-size: 15px;
+  color: rgba(255,255,255,0.6);
+  white-space: nowrap;
 }
 
 @keyframes fadeIn {
@@ -104,18 +209,12 @@ button:hover:before {
   100% { opacity: 1; transform: translateY(0); }
 }
 
-h1 {
-  position: relative;
-  padding: 10;
-  margin: 10;
-  font-family: "impact", sans-serif;
-  font-weight: 300;
-  font-size: 120px;
+#endBox h1 {
+  margin: 0;
+  font-family: "Press Start 2P", "impact", sans-serif;
+  font-size: 46px;
   color: #d3cece;
-  -webkit-transition: all 0.4s ease 0s;
-  -o-transition: all 0.4s ease 0s;
-  transition: all 0.4s ease 0s;
-  left: 1%;
+  text-shadow: 0 0 14px rgba(255,255,255,0.35), 3px 3px 0 rgba(0,0,0,0.6);
 }
 
 #screenshot {
@@ -276,11 +375,6 @@ h1 {
   height: 760px;  
 }
 
-#skinPreview {
-  image-rendering: pixelated;
-  border-radius: 8px;
-}
-
 #playerUI {
   position: fixed;
   top: 20px;
@@ -296,88 +390,66 @@ h1 {
   image-rendering: pixelated;
 }
 
-#startOverlay {
-  display: flex;
-  gap: 60px;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-  padding: 40px;
-  border-radius: 12px;
-}
-
-#leftPanel {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-#rightPanel {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-}
-
-#rightPanel h1 {
-  margin: 0;
-}
-
-#usernameInput {
-  margin: 30px;
-  background: url("images/Button.jpg") center/cover no-repeat;
-  border: none;
-  outline: none;
-  max-width: 450px;
-  padding: 10px 20px;
-  font-size: 50px;
-  border-radius: 9px;
-  box-shadow: inset 2px 5px 10px rgb(255, 255, 255);
-  color: #e0f4ea;
-  text-align: center;
-}
-
+/* Wie im Original: nah am linken Rand, vertikal zentriert, statt in einer
+   zentrierten Box neben dem Rest zu schweben. */
 #titleBlock {
   position: absolute;
   top: 50%;
-  left: 20%;
-  transform: translate(-50%, -50%);
+  left: 9%;
+  transform: translateY(-50%);
+  width: 560px;
   display: flex;
-  background: transparent;
-  padding: 40px;
-  border-radius: 12px;
-  text-align: center;
   flex-direction: column;
-  gap: 100px;
-  z-index: 10;
+  gap: 28px;
+}
+
+#titleBlock button {
+  font-size: 30px;
+  padding: 1.2em 1.6em;
 }
 
 #skinBlock {
-  position: absolute;
-  top: 75%;
-  left: 68%;
-  transform: translateY(-50%);
-  z-index: 10;
-  background: transparent;
-  padding: 25px;
-  border-radius: 12px;
-
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 40px;
+  gap: 16px;
+}
+
+#usernameInput {
+  width: 100%;
+  box-sizing: border-box;
+  background: rgba(0,0,0,0.35);
+  border: 2px solid rgba(255,255,255,0.2);
+  outline: none;
+  padding: 16px 18px;
+  font-size: 20px;
+  font-family: Arial, sans-serif;
+  border-radius: 10px;
+  color: #fff;
+  text-align: center;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+#usernameInput:focus {
+  border-color: #8fb8ff;
+  box-shadow: 0 0 14px rgba(143,184,255,0.5);
+}
+
+#usernameInput::placeholder {
+  color: rgba(255,255,255,0.5);
 }
 
 #skinPreview {
-  width: 300px;
-  height: 300px;
+  width: 200px;
+  height: 200px;
   image-rendering: pixelated;
-  border-radius: 8px;
+  border-radius: 12px;
+  border: 2px solid rgba(255,255,255,0.15);
   transition: transform 0.25s cubic-bezier(.22,1,.36,1);
 }
 
 #skinPreview:hover {
-  transform: scale(1.06) rotate(-1deg);
+  transform: scale(1.08) rotate(-2deg);
 }
 
 #bigScore {
@@ -412,6 +484,7 @@ h1 {
   left: 50%;
   transform: translate(-50%, -50%);
   min-width: 340px;
+  max-width: 90vw;
   text-align: center;
   background: rgba(10,10,15,0.95);
   border: 2px solid rgba(255,255,255,0.25);
@@ -424,111 +497,77 @@ h1 {
   animation: popIn 0.5s cubic-bezier(.34,1.56,.64,1);
 }
 
+#popup h2 {
+  margin: 0 0 16px;
+  font-family: "Press Start 2P", sans-serif;
+  font-size: 16px;
+  color: #ffe9a8;
+}
+
+#popup p {
+  font-size: 15px;
+  line-height: 1.6;
+  color: #e0e0e0;
+  margin: 0 0 20px;
+}
+
+#popup .social-link {
+  margin-bottom: 16px;
+}
+
+#popup button {
+  font-size: 13px;
+  padding: 0.8em 1.4em;
+}
+
 @keyframes popIn {
   0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
   100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 }
 
-#creator {
-  position: absolute;
-  right: 10%;
-  top: 5%;
-  width: 500px;
-
-  background: transparent;
-  padding: 30px;
-  border-radius: 10px;
-
-  z-index: 5;
-}
-
-#creator h2 {
-  margin-top: 0;
-  text-align: center;
-  font-size: 50px;
-}
-
 #profilbild {
-  width: 150px;
-  height: 150px;
-  border-radius: 100px;
-  display: block;
-  margin: 0 auto 20px auto;
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.25);
 }
 
-#youtubeLink {
+.creator-links {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.social-link {
   display: block;
   text-align: center;
-  color: #e0f4ea;
+  color: #fff;
   text-decoration: none;
-    --green: #ffffff;
-  font-size: 20px;
-  padding: 0.7em 2.7em;
-  letter-spacing: 0.06em;
-  position: relative;
-  font-family: inherit;
-  border-radius: 0.6em;
-  overflow: hidden;
-  transition: all 0.3s;
-  line-height: 1.4em;
-  border: 2px solid var(--green);
-  background: linear-gradient(to right, rgba(255, 255, 255, 0.1) 2%, transparent 40%,transparent 60% , rgb(254, 254, 254) 100%);
-  color: var(--green);
-  box-shadow: inset 0 0 10px #c1c7c466, 0 0 9px 3px rgba(255, 255, 255, 0.1);
-  background: url("images/Button-yt.png") center/cover no-repeat;
+  font-size: 14px;
+  font-weight: bold;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 2px solid rgba(255,255,255,0.25);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  white-space: nowrap;
 }
+
+.social-link:hover {
+  transform: translateY(-3px) scale(1.03);
+  box-shadow: 0 8px 18px rgba(0,0,0,0.4);
+}
+
+.social-link.yt { background: linear-gradient(135deg, #ff0000cc, #ff5e5ecc); }
+.social-link.twitch { background: linear-gradient(135deg, #9146ffcc, #6441a5cc); }
+.social-link.discord { background: linear-gradient(135deg, #5865f2cc, #404eedcc); }
 
 #startBtn { --bg: url("images/Button.jpg"); }
 #multiplayerBtn { --bg: url("images/Button-multi.png"); }
 #wieBtn { --bg: url("images/Button-wie.jpg"); }
 #guessBtn { --bg: url("images/Button.jpg"); }
 #backBtn { --bg: url("images/Button.jpg"); }
-
-#twitchLink {
-  margin-top: 20px;
-  display: block;
-  text-align: center;
-  color: #e0f4ea;
-  text-decoration: none;
-    --green: #ffffff;
-  font-size: 20px;
-  padding: 0.7em 2.7em;
-  letter-spacing: 0.06em;
-  position: relative;
-  font-family: inherit;
-  border-radius: 0.6em;
-  overflow: hidden;
-  transition: all 0.3s;
-  line-height: 1.4em;
-  border: 2px solid var(--green);
-  background: linear-gradient(to right, rgba(255, 255, 255, 0.1) 2%, transparent 40%,transparent 60% , rgb(254, 254, 254) 100%);
-  color: var(--green);
-  box-shadow: inset 0 0 10px #c1c7c466, 0 0 9px 3px rgba(255, 255, 255, 0.1);
-  background: url("images/Button-twitch.png") center/cover no-repeat;
-}
-
-#dcLink {
-  margin-top: 20px;
-  display: block;
-  text-align: center;
-  font-size: 20px;
-  color: #e0f4ea;
-  text-decoration: none;
-    --green: #ffffff;
-  padding: 0.7em 2.7em;
-  letter-spacing: 0.06em;
-  position: relative;
-  font-family: inherit;
-  border-radius: 0.6em;
-  overflow: hidden;
-  transition: all 0.3s;
-  line-height: 1.4em;
-  border: 2px solid var(--green);
-  background: linear-gradient(to right, rgba(255, 255, 255, 0.1) 2%, transparent 40%,transparent 60% , rgb(254, 254, 254) 100%);
-  color: var(--green);
-  box-shadow: inset 0 0 10px #c1c7c466, 0 0 9px 3px rgba(255, 255, 255, 0.1);
-  background: url("images/Button.jpg") center/cover no-repeat;
-}
 
 #endScreen {
   position: fixed;
@@ -542,6 +581,9 @@ h1 {
   justify-content: center;
   z-index: 999;
   animation: fadeIn 0.4s ease;
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding: 20px 0;
 }
 
 #endBox {
@@ -566,94 +608,207 @@ h1 {
   animation: finalScorePop 0.8s 0.3s cubic-bezier(.34,1.56,.64,1) backwards;
 }
 
+#finalRank {
+  font-family: "Press Start 2P", sans-serif;
+  font-size: 20px;
+  margin: 0 0 24px;
+  color: #ffe9a8;
+  text-shadow: 0 0 10px rgba(255,215,110,0.5);
+  animation: rankPop 0.7s cubic-bezier(.34,1.56,.64,1) backwards;
+}
+
+@keyframes rankPop {
+  0% { transform: scale(0.3) rotate(-12deg); opacity: 0; }
+  60% { transform: scale(1.25) rotate(6deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+/* Extra Glanz für Top 3 - dezenter Dauerpuls nach dem Pop-In */
+#finalRank.top3 {
+  color: #fff7d6;
+  animation: rankPop 0.7s cubic-bezier(.34,1.56,.64,1) backwards,
+             rankGlow 1.6s 0.7s ease-in-out infinite;
+}
+
+@keyframes rankGlow {
+  0%, 100% { text-shadow: 0 0 12px rgba(255,215,110,0.6), 0 0 24px rgba(255,180,60,0.35); }
+  50% { text-shadow: 0 0 22px rgba(255,215,110,1), 0 0 44px rgba(255,180,60,0.7); }
+}
+
 @keyframes finalScorePop {
   0% { transform: scale(0.2) rotate(-10deg); opacity: 0; }
   55% { transform: scale(1.3) rotate(5deg); opacity: 1; }
   100% { transform: scale(1) rotate(0deg); }
 }
 
-#Icon {
-  margin-left: 50px;
-  width: 150px;
-  height: 150px;
+#leaderboardBox {
+  width: 400px;
+  max-width: 80vw;
+  margin: 20px auto;
+  animation: fadeIn 0.5s 0.5s ease backwards;
+}
+
+/* Immer exakt 10 Zeilen (siehe renderLeaderboard in mcguessr.js) - kein
+   Max-Height/Scroll mehr nötig, die Liste hat dadurch immer ihre volle,
+   gleichbleibende Größe. */
+.leaderboardList {
+  font-size: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lb-entry.lb-empty {
+  opacity: 0.35;
+}
+
+.lb-entry {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.05);
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.lb-entry:hover {
+  background: rgba(255,255,255,0.12);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.2);
+}
+
+.lb-skin {
+  width: 34px;
+  height: 34px;
   image-rendering: pixelated;
 }
 
-#Icon, h1 {
-  display: inline-block;
-  vertical-align: middle;
+.rank {
+  width: 34px;
+  text-align: center;
 }
+
+.name {
+  flex: 1;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.score {
+  font-weight: bold;
+}
+
+.gold { background: linear-gradient(90deg, #ffd70033, #ffd70088); border: 1px solid gold; }
+.silver { background: linear-gradient(90deg, #c0c0c033, #c0c0c088); border: 1px solid silver; }
+.bronze { background: linear-gradient(90deg, #cd7f3233, #cd7f3288); border: 1px solid #cd7f32; }
 
 @media (max-width: 768px) {
   #mapContainer.fullscreen #mapViewport {
-  width: 95vw;
-  height: 60vh;
-}
+    width: 95vw;
+    height: 60vh;
+  }
 
-#mapWrapper {
-  touch-action: none;
-}
-
-#guessBtn {
-  font-size: 24px;
-  padding: 15px;
-}
-
-#playerSkin {
-  width: 50px;
-}
-
-#bossbar {
-  width: 80%;
-}
-
-h1 {
-  font-size: 50px;
-}
-
-#finalScore {
-  font-size: 40px;
-}
-
-#bigScore {
-  font-size: 30px;
-}
-
-#titleBlock {
-  position: static;
-  transform: none;
-  width: 100%;
-  align-items: center;
-}
-
-#skinBlock {
-  position: static;
-  transform: none;
-  width: 100%;
-}
-
-#titleBlock {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-#skinPreview {
-  width: 150px;
-  height: 150px;
-}
-
-@media (max-width: 768px) {
   #mapContainer:hover #mapViewport {
     width: 320px;
     height: 220px;
   }
-}
 
-@media (max-width: 768px) {
   #mapViewport {
     width: 90vw;
     height: 50vh;
   }
-}
+
+  #mapWrapper {
+    touch-action: none;
+  }
+
+  #guessBtn {
+    font-size: 13px;
+    padding: 0.9em 1.2em;
+  }
+
+  #playerSkin {
+    width: 50px;
+  }
+
+  #bossbar {
+    width: 80%;
+  }
+
+  #finalScore {
+    font-size: 40px;
+  }
+
+  #finalRank {
+    font-size: 13px;
+  }
+
+  #bigScore {
+    font-size: 30px;
+  }
+
+  #startScreen {
+    padding: 24px;
+    box-sizing: border-box;
+  }
+
+  .page,
+  .content {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .hero,
+  #titleBlock,
+  .right-col {
+    position: static;
+    top: auto;
+    left: auto;
+    right: auto;
+    transform: none;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .hero {
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+  }
+
+  .hero h1 {
+    font-size: 18px;
+    white-space: normal;
+  }
+
+  .hero #Icon {
+    width: 60px;
+    height: 60px;
+  }
+
+  #titleBlock, #skinBlock {
+    max-width: 100%;
+  }
+
+  #creator {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .creator-links {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  button {
+    font-size: 12px;
+  }
+
+  #titleBlock button {
+    font-size: 15px;
+    padding: 1em 1em;
+  }
 }

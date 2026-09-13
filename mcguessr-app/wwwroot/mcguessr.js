@@ -28,7 +28,9 @@ let playerName = "";
 
 document.getElementById("backBtn").onclick = () => {
   document.getElementById("endScreen").style.display = "none";
-  startScreen.style.display = "block";
+  // Leerstring statt "block": #startScreen ist per CSS ein Grid-Layout -
+  // "block" würde das als Inline-Style überschreiben und das Layout zerstören.
+  startScreen.style.display = "";
 
   round = 0;
   totalScore = 0;
@@ -73,6 +75,10 @@ startBtn.onclick = () => {
 }
 document.getElementById("wieBtn").onclick = function () {
   document.getElementById("popup").style.display = "block";
+};
+
+document.getElementById("popupCloseBtn").onclick = function () {
+  document.getElementById("popup").style.display = "none";
 };
 
 let maxTime = 30;
@@ -476,14 +482,108 @@ setTimeout(() => {
 }, 5000);
 };
 //ENDE
-function endGame() {
+async function endGame() {
   // UI wechseln
   game.style.display = "none";
   document.getElementById("endScreen").style.display = "flex";
 
   // Score anzeigen
   document.getElementById("finalScore").innerText = totalScore + " Punkte";
+
+  const finalRankEl = document.getElementById("finalRank");
+  finalRankEl.style.display = "none";
+  finalRankEl.classList.remove("top3");
+
+  // Erst wenn der Score wirklich gespeichert ist das Leaderboard neu laden -
+  // sonst kommt beim GET direkt danach noch der alte Stand zurück und man
+  // musste bisher manuell neu laden, um den eigenen Score zu sehen.
+  const rank = await sendScore(playerName, totalScore);
+  if (rank !== null) {
+    const medals = { 1: "🥇 ", 2: "🥈 ", 3: "🥉 " };
+    finalRankEl.textContent = `${medals[rank] ?? ""}Platz ${rank}`;
+    finalRankEl.classList.toggle("top3", rank <= 3);
+    // display war eben schon "none" -> Animation (siehe CSS) spielt beim
+    // Umschalten auf "block" garantiert von vorne ab.
+    finalRankEl.style.display = "block";
+  }
+
+  await loadLeaderboard();
 }
+
+async function sendScore(name, score) {
+  try {
+    const res = await fetch("/leaderboard", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, score }),
+    });
+
+    if (!res.ok) return null;
+
+    const data = await res.json();
+    return data.rank ?? null;
+  } catch (e) {
+    console.error("Score konnte nicht gesendet werden:", e);
+    return null;
+  }
+}
+
+async function loadLeaderboard() {
+  let entries;
+  try {
+    const res = await fetch("/leaderboard");
+    entries = await res.json();
+  } catch (e) {
+    console.error("Leaderboard konnte nicht geladen werden:", e);
+    return;
+  }
+
+  // Wird sowohl auf dem Startbildschirm als auch auf dem Endscreen angezeigt -
+  // beide Container tragen die Klasse "leaderboardList" und bekommen dieselben
+  // Daten.
+  document.querySelectorAll(".leaderboardList").forEach((board) => renderLeaderboard(board, entries));
+}
+
+const LEADERBOARD_SLOTS = 10;
+
+function renderLeaderboard(board, entries) {
+  board.innerHTML = "";
+  const medals = ["🥇", "🥈", "🥉"];
+
+  // Immer alle 10 Plätze rendern, auch unbelegte - das Leaderboard soll
+  // stets seine volle Größe behalten statt mit weniger Einträgen zu schrumpfen.
+  for (let index = 0; index < LEADERBOARD_SLOTS; index++) {
+    const entry = entries[index];
+
+    const row = document.createElement("div");
+    row.className = "lb-entry";
+    if (!entry) row.classList.add("lb-empty");
+    else if (index === 0) row.classList.add("gold");
+    else if (index === 1) row.classList.add("silver");
+    else if (index === 2) row.classList.add("bronze");
+
+    const rank = document.createElement("span");
+    rank.className = "rank";
+    rank.textContent = medals[index] ?? (index + 1) + ".";
+
+    const skin = document.createElement("img");
+    skin.className = "lb-skin";
+    skin.src = `https://minotar.net/helm/${encodeURIComponent(entry ? entry.name : "MHF_Steve")}/30.png`;
+
+    const name = document.createElement("span");
+    name.className = "name";
+    name.textContent = entry ? entry.name : "— —"; // textContent statt innerHTML - kein XSS über den Spielernamen
+
+    const score = document.createElement("span");
+    score.className = "score";
+    score.textContent = entry ? entry.score : "";
+
+    row.append(rank, skin, name, score);
+    board.appendChild(row);
+  }
+}
+
+loadLeaderboard();
 
 // -------------------- ZOOM --------------------
 mapViewport.addEventListener("wheel", (e) => {
