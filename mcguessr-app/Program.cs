@@ -1,9 +1,19 @@
+using McguesSr.Data;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers()
     .AddJsonOptions(o => o.JsonSerializerOptions.PropertyNamingPolicy =
         System.Text.Json.JsonNamingPolicy.CamelCase);
+builder.Services.AddDbContext<LeaderboardDbContext>(o =>
+    o.UseSqlite($"Data Source={Path.Combine(builder.Environment.ContentRootPath, "leaderboard.db")}"));
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    scope.ServiceProvider.GetRequiredService<LeaderboardDbContext>().Database.EnsureCreated();
+}
 
 if (!app.Environment.IsDevelopment())
 {
