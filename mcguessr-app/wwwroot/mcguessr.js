@@ -450,6 +450,11 @@ window.addEventListener("mouseup", () => {
 guessBtn.onclick = () => {
   if (guessX === null) return;
 
+  // Sonst läuft der Rundentimer während der 5s-Ergebnisanzeige weiter und
+  // autoSubmit() feuert mit dem alten Guess erneut - die Runde wird dann
+  // heimlich ein zweites Mal gezählt und das Spiel endet zu früh.
+  clearInterval(timerInterval);
+
   const dx = guessX - currentLocation.x;
   const dy = guessY - currentLocation.y;
 
