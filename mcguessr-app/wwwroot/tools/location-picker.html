@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Location Picker - MCGuessr Dev Tool</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #14151c;
+    color: #eee;
+    display: flex;
+    flex-wrap: wrap;
+    min-height: 100vh;
+  }
+  h1 {
+    font-size: 18px;
+    margin: 0 0 4px;
+  }
+  p.hint {
+    margin: 0 0 16px;
+    font-size: 13px;
+    color: #aaa;
+  }
+  .left {
+    flex: 1 1 600px;
+    padding: 20px;
+    min-width: 320px;
+  }
+  .right {
+    flex: 0 0 380px;
+    padding: 20px;
+    background: #1c1e28;
+    border-left: 1px solid #333;
+    max-height: 100vh;
+    overflow-y: auto;
+  }
+  fieldset {
+    border: 1px solid #333;
+    border-radius: 8px;
+    margin: 0 0 16px;
+    padding: 12px;
+  }
+  legend {
+    padding: 0 6px;
+    font-size: 12px;
+    color: #9cf;
+  }
+  label {
+    display: block;
+    font-size: 12px;
+    color: #ccc;
+    margin: 8px 0 3px;
+  }
+  input[type="text"], input[type="number"] {
+    width: 100%;
+    background: #0e0f14;
+    border: 1px solid #444;
+    border-radius: 6px;
+    color: #fff;
+    padding: 6px 8px;
+    font-size: 13px;
+  }
+  button {
+    cursor: pointer;
+    background: #2d3b55;
+    border: 1px solid #4a6491;
+    color: #fff;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 13px;
+    margin: 4px 4px 0 0;
+  }
+  button:hover { background: #3a4d6e; }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+  button.danger { background: #55242d; border-color: #914a5c; }
+  button.danger:hover { background: #6e2f3a; }
+  button.primary { background: #1f6b3a; border-color: #2f9a56; font-weight: bold; }
+  button.primary:hover { background: #278a4a; }
+
+  #zoomBar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+    font-size: 12px;
+    color: #aaa;
+  }
+  #zoomBar button {
+    margin: 0;
+    padding: 4px 10px;
+  }
+  #mapWrap {
+    width: 100%;
+    max-height: 70vh;
+    border: 2px solid #444;
+    border-radius: 8px;
+    overflow: auto;
+    background: #000;
+    cursor: crosshair;
+  }
+  /* Wickelt sich per inline-block exakt um das (ggf. gezoomte) Bild, damit
+     Marker als %-Position relativ zum echten Bildinhalt sitzen und nicht
+     relativ zum (fix großen, scrollbaren) #mapWrap. */
+  #mapInner {
+    position: relative;
+    display: inline-block;
+  }
+  #mapImg {
+    display: block;
+    user-select: none;
+  }
+  .marker {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    margin: -7px 0 0 -7px;
+    background: #ff4d4d;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    font-size: 9px;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+  .marker.pending {
+    background: #ffcc33;
+    width: 18px;
+    height: 18px;
+    margin: -9px 0 0 -9px;
+    box-shadow: 0 0 0 3px rgba(255,204,51,0.35);
+  }
+
+  #currentShot {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    background: #0e0f14;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 10px;
+  }
+  #currentShotImg {
+    width: 140px;
+    height: 90px;
+    object-fit: cover;
+    border-radius: 6px;
+    background: #222;
+    flex-shrink: 0;
+  }
+  #currentShotInfo {
+    font-size: 12px;
+    color: #ccc;
+    min-width: 0;
+  }
+  #currentShotInfo .fname {
+    color: #fff;
+    font-weight: bold;
+    word-break: break-all;
+  }
+  #currentShotInfo .progress {
+    color: #888;
+    margin-top: 4px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    margin-top: 8px;
+  }
+  th, td {
+    border-bottom: 1px solid #333;
+    padding: 4px 6px;
+    text-align: left;
+  }
+  td.num { width: 60px; }
+  #status {
+    font-size: 12px;
+    color: #7c7;
+    min-height: 16px;
+    margin-top: 6px;
+  }
+  #fileProtocolWarning {
+    display: none;
+    background: #55242d;
+    border: 2px solid #914a5c;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 0 20px 16px;
+    font-size: 13px;
+    width: 100%;
+  }
+  #saveStatus {
+    font-size: 12px;
+    min-height: 16px;
+    margin-top: 8px;
+  }
+  #queueList {
+    max-height: 140px;
+    overflow-y: auto;
+    font-size: 12px;
+    margin-top: 8px;
+    border: 1px solid #333;
+    border-radius: 6px;
+  }
+  #queueList div {
+    padding: 4px 8px;
+    border-bottom: 1px solid #262626;
+    color: #888;
+  }
+  #queueList div.next {
+    color: #fff;
+    background: #2d3b55;
+    font-weight: bold;
+  }
+  #queueList div.used {
+    text-decoration: line-through;
+    color: #555;
+  }
+  #queueList:empty::after {
+    content: "Noch keine Screenshots geladen.";
+    display: block;
+    padding: 8px;
+    color: #666;
+  }
+  textarea {
+    width: 100%;
+    min-height: 120px;
+    background: #0e0f14;
+    border: 1px solid #444;
+    border-radius: 6px;
+    color: #cde;
+    font-family: monospace;
+    font-size: 12px;
+    padding: 8px;
+    resize: vertical;
+  }
+</style>
+</head>
+<body>
+
+<div id="fileProtocolWarning">
+  ⚠ Diese Seite läuft gerade als lokale Datei (<code id="currentProtocol"></code>),
+  nicht über den Server. Speichern/Laden funktioniert so nicht ("Failed to fetch").
+  Bitte über den laufenden Server öffnen:
+  <code>http://localhost:5000/tools/location-picker.html</code>
+</div>
+
+<div class="left">
+  <h1>Location Picker</h1>
+  <p class="hint">
+    Karten-ID + Screenshots wählen, dann pro Screenshot: Punkt auf der Karte
+    anklicken, "Speichern" drücken - landet sofort in
+    <code>maps/&lt;id&gt;.json</code>, und der nächste Screenshot ist dran.
+  </p>
+
+  <fieldset>
+    <legend>1. Kartenbild</legend>
+    <label>Bilddatei von der Festplatte laden (nur zur Vorschau hier im Tool)</label>
+    <input type="file" id="fileInput" accept="image/*">
+    <label>...oder Pfad einer bereits im wwwroot liegenden Karte (mit führendem /)</label>
+    <input type="text" id="pathInput" placeholder="/images/map.png">
+    <button id="loadPathBtn">Von Pfad laden</button>
+  </fieldset>
+
+  <div id="zoomBar">
+    <button id="zoomOutBtn" type="button">−</button>
+    <span id="zoomLabel">100%</span>
+    <button id="zoomInBtn" type="button">+</button>
+    <button id="zoomResetBtn" type="button">Reset</button>
+    <span>(Mausrad über der Karte zoomt zum Punkt unter dem Cursor)</span>
+  </div>
+  <div id="mapWrap">
+    <div id="mapInner">
+      <img id="mapImg" alt="Karte hier laden">
+    </div>
+  </div>
+
+  <table id="pointsTable">
+    <thead>
+      <tr><th>#</th><th>Bildpfad</th><th class="num">x</th><th class="num">y</th></tr>
+    </thead>
+    <tbody id="pointsBody"></tbody>
+  </table>
+</div>
+
+<div class="right">
+  <fieldset>
+    <legend>2. Karte &amp; Screenshots</legend>
+    <label>Karten-ID (Dateiname ohne .json, z.B. ca12)</label>
+    <input type="text" id="mapIdInput" placeholder="ca12">
+    <label>Pfad-Präfix (Ordner, in dem die Screenshots im wwwroot liegen)</label>
+    <input type="text" id="prefixInput" placeholder="wird aus der Karten-ID abgeleitet">
+    <label>Alle Screenshot-Dateien auf einmal auswählen (Mehrfachauswahl im Dialog)</label>
+    <input type="file" id="screenshotFilesInput" accept="image/*" multiple>
+    <div id="queueList"></div>
+  </fieldset>
+
+  <fieldset>
+    <legend>3. Aktueller Screenshot</legend>
+    <div id="currentShot">
+      <img id="currentShotImg" alt="">
+      <div id="currentShotInfo">
+        <div class="fname" id="currentShotName">-</div>
+        <div class="progress" id="currentShotProgress"></div>
+      </div>
+    </div>
+    <button id="skipBtn">Überspringen</button>
+  </fieldset>
+
+  <fieldset>
+    <legend>4. Punkt</legend>
+    <div style="font-size:11px; color:#888; margin-bottom:6px;">
+      Auf die Karte klicken (gelber Marker = noch nicht gespeichert), dann:
+    </div>
+    <button id="saveBtn" class="primary" disabled>Speichern</button>
+    <button id="removeLastBtn">Letzten Punkt entfernen</button>
+    <div id="saveStatus"></div>
+  </fieldset>
+
+  <fieldset>
+    <legend>5. Backup / Export</legend>
+    <button id="copyBtn">Aktuellen Stand als JSON kopieren</button>
+    <textarea id="outputArea" readonly></textarea>
+    <div id="status"></div>
+  </fieldset>
+</div>
+
+<script>
+if (location.protocol === "file:") {
+  document.getElementById("currentProtocol").textContent = location.href;
+  document.getElementById("fileProtocolWarning").style.display = "block";
+}
+
+const mapImg = document.getElementById("mapImg");
+const mapWrap = document.getElementById("mapWrap");
+const mapInner = document.getElementById("mapInner");
+const pointsBody = document.getElementById("pointsBody");
+const outputArea = document.getElementById("outputArea");
+const statusEl = document.getElementById("status");
+const saveStatusEl = document.getElementById("saveStatus");
+const queueListEl = document.getElementById("queueList");
+const zoomLabel = document.getElementById("zoomLabel");
+
+const mapIdInput = document.getElementById("mapIdInput");
+const prefixInput = document.getElementById("prefixInput");
+
+// Genau dieser Fehler ist schon passiert: das Präfix-Feld hatte noch den
+// Default "images/newmap/" aus einer früheren Sitzung, während man längst
+// an einer anderen Karten-ID weitergearbeitet hat - die gespeicherten
+// Punkte zeigten dadurch auf einen nicht existierenden Ordner. Deshalb:
+// Präfix wird aus der Karten-ID abgeleitet, außer man tippt selbst etwas
+// anderes rein, und beides wird über Sitzungen hinweg gemerkt.
+let prefixManuallyEdited = false;
+
+try {
+  const savedMapId = localStorage.getItem("locationPicker.mapId");
+  const savedPrefix = localStorage.getItem("locationPicker.prefix");
+  const savedPrefixManual = localStorage.getItem("locationPicker.prefixManual") === "1";
+  if (savedMapId) mapIdInput.value = savedMapId;
+  if (savedPrefix) prefixInput.value = savedPrefix;
+  prefixManuallyEdited = savedPrefixManual;
+} catch (e) { /* localStorage evtl. nicht verfügbar - dann einfach Default */ }
+
+function deriveAndPersistPrefix() {
+  const mapId = mapIdInput.value.trim();
+  if (mapId && !prefixManuallyEdited) {
+    prefixInput.value = `images/${mapId}/`;
+  }
+  try {
+    localStorage.setItem("locationPicker.mapId", mapId);
+    localStorage.setItem("locationPicker.prefix", prefixInput.value);
+    localStorage.setItem("locationPicker.prefixManual", prefixManuallyEdited ? "1" : "0");
+  } catch (e) { /* ignorieren */ }
+}
+
+mapIdInput.addEventListener("input", deriveAndPersistPrefix);
+prefixInput.addEventListener("input", () => {
+  prefixManuallyEdited = true;
+  deriveAndPersistPrefix();
+});
+
+deriveAndPersistPrefix();
+const saveBtn = document.getElementById("saveBtn");
+const currentShotImg = document.getElementById("currentShotImg");
+const currentShotName = document.getElementById("currentShotName");
+const currentShotProgress = document.getElementById("currentShotProgress");
+
+let points = []; // bereits gespeicherte { image, x, y } - Spiegel der Server-Datei
+let screenshotFiles = []; // File-Objekte, sortiert
+let queuePointer = 0; // Index des aktuellen (noch offenen) Screenshots
+let pendingPoint = null; // { x, y } - geklickt, aber noch nicht gespeichert
+
+document.getElementById("fileInput").addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  mapImg.src = URL.createObjectURL(file);
+  setStatus("Kartenbild geladen (nur lokale Vorschau).");
+});
+
+document.getElementById("loadPathBtn").onclick = () => {
+  let path = document.getElementById("pathInput").value.trim();
+  if (!path) return;
+  // Pfad ist relativ zu /tools/ - mit führendem / macht man ihn site-relativ,
+  // damit er unabhängig davon funktioniert, wo dieses Tool liegt.
+  if (!/^([a-z]+:)?\//i.test(path)) path = "/" + path;
+  mapImg.src = path;
+  setStatus("Lade " + path + " ...");
+};
+
+mapImg.addEventListener("error", () => {
+  if (mapImg.src) setStatus("Bild konnte nicht geladen werden.");
+});
+
+mapImg.addEventListener("load", () => {
+  resetZoom();
+});
+
+document.getElementById("screenshotFilesInput").addEventListener("change", async (e) => {
+  screenshotFiles = Array.from(e.target.files)
+    .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+  queuePointer = 0;
+
+  await loadExistingPoints();
+
+  // Screenshots, die laut maps/<id>.json schon einen Punkt haben, überspringen
+  // - so kann man eine Session einfach fortsetzen, ohne von vorne anzufangen.
+  const savedImages = new Set(points.map((p) => p.image));
+  while (
+    queuePointer < screenshotFiles.length &&
+    savedImages.has(prefixInput.value + screenshotFiles[queuePointer].name)
+  ) {
+    queuePointer++;
+  }
+
+  renderQueue();
+  showCurrentShot();
+  setStatus(`${screenshotFiles.length} Screenshots geladen, ${queuePointer} bereits gespeichert übersprungen.`);
+});
+
+async function loadExistingPoints() {
+  const mapId = mapIdInput.value.trim();
+  if (!mapId) { points = []; renderPoints(); return; }
+
+  try {
+    const res = await fetch(`/maps/${encodeURIComponent(mapId)}.json?t=${Date.now()}`);
+    points = res.ok ? await res.json() : [];
+  } catch (e) {
+    points = [];
+  }
+  renderPoints();
+}
+
+mapIdInput.addEventListener("change", () => {
+  queuePointer = 0;
+  loadExistingPoints().then(() => {
+    renderQueue();
+    showCurrentShot();
+  });
+});
+
+function renderQueue() {
+  queueListEl.innerHTML = "";
+  screenshotFiles.forEach((file, i) => {
+    const row = document.createElement("div");
+    row.textContent = file.name;
+    if (i < queuePointer) row.className = "used";
+    else if (i === queuePointer) row.className = "next";
+    queueListEl.appendChild(row);
+  });
+}
+
+function currentImagePath() {
+  if (queuePointer < screenshotFiles.length) {
+    return prefixInput.value + screenshotFiles[queuePointer].name;
+  }
+  return null;
+}
+
+function showCurrentShot() {
+  pendingPoint = null;
+  updatePendingMarker();
+  saveBtn.disabled = true;
+
+  if (queuePointer >= screenshotFiles.length) {
+    currentShotImg.src = "";
+    currentShotName.textContent = screenshotFiles.length ? "Fertig - alle Screenshots platziert!" : "-";
+    currentShotProgress.textContent = screenshotFiles.length ? "" : "Noch keine Screenshots geladen.";
+    return;
+  }
+
+  const file = screenshotFiles[queuePointer];
+  currentShotImg.src = URL.createObjectURL(file);
+  currentShotName.textContent = file.name;
+  currentShotProgress.textContent = `${queuePointer + 1} / ${screenshotFiles.length}`;
+}
+
+document.getElementById("skipBtn").onclick = () => {
+  if (queuePointer >= screenshotFiles.length) return;
+  queuePointer++;
+  renderQueue();
+  showCurrentShot();
+};
+
+mapWrap.addEventListener("click", (e) => {
+  if (!mapImg.src || !mapImg.naturalWidth) {
+    setStatus("Zuerst ein Kartenbild laden.");
+    return;
+  }
+  if (queuePointer >= screenshotFiles.length) {
+    setStatus("Kein aktueller Screenshot - erst Dateien auswählen.");
+    return;
+  }
+
+  const rect = mapImg.getBoundingClientRect();
+  const x = (e.clientX - rect.left) / rect.width;
+  const y = (e.clientY - rect.top) / rect.height;
+  if (x < 0 || x > 1 || y < 0 || y > 1) return; // Klick war außerhalb des Bildes (Scrollbereich)
+
+  pendingPoint = { x: round3(x), y: round3(y) };
+  updatePendingMarker();
+  saveBtn.disabled = false;
+});
+
+function updatePendingMarker() {
+  const existing = mapInner.querySelector(".marker.pending");
+  if (existing) existing.remove();
+  if (!pendingPoint) return;
+
+  const marker = document.createElement("div");
+  marker.className = "marker pending";
+  marker.style.left = (pendingPoint.x * 100) + "%";
+  marker.style.top = (pendingPoint.y * 100) + "%";
+  mapInner.appendChild(marker);
+}
+
+saveBtn.onclick = async () => {
+  const mapId = mapIdInput.value.trim();
+  if (!mapId) { setSaveStatus("Erst eine Karten-ID eintragen.", true); return; }
+  if (!pendingPoint) return;
+
+  const image = currentImagePath();
+  if (!image) return;
+
+  saveBtn.disabled = true;
+  setSaveStatus("Speichere...");
+
+  try {
+    const res = await fetch(`/dev/maps/${encodeURIComponent(mapId)}/locations`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ image, x: pendingPoint.x, y: pendingPoint.y }),
+    });
+
+    if (!res.ok) {
+      setSaveStatus("Fehler beim Speichern: " + (await res.text()), true);
+      saveBtn.disabled = false;
+      return;
+    }
+
+    points.push({ image, x: pendingPoint.x, y: pendingPoint.y });
+    renderPoints();
+
+    queuePointer++;
+    renderQueue();
+    showCurrentShot();
+    setSaveStatus(`Gespeichert (${points.length} Punkte in maps/${mapId}.json).`);
+  } catch (e) {
+    setSaveStatus("Server nicht erreichbar: " + e.message, true);
+    saveBtn.disabled = false;
+  }
+};
+
+document.getElementById("removeLastBtn").onclick = async () => {
+  const mapId = mapIdInput.value.trim();
+  if (!mapId || points.length === 0) return;
+  if (!confirm("Letzten gespeicherten Punkt wirklich entfernen?")) return;
+
+  try {
+    const res = await fetch(`/dev/maps/${encodeURIComponent(mapId)}/locations/last`, { method: "DELETE" });
+    if (!res.ok) { setSaveStatus("Fehler beim Entfernen: " + (await res.text()), true); return; }
+
+    points.pop();
+    renderPoints();
+
+    if (queuePointer > 0) queuePointer--;
+    renderQueue();
+    showCurrentShot();
+    setSaveStatus("Letzter Punkt entfernt.");
+  } catch (e) {
+    setSaveStatus("Server nicht erreichbar: " + e.message, true);
+  }
+};
+
+// -------------------- ZOOM --------------------
+let zoomLevel = 1;
+let baseWidthPx = 0; // Bildbreite in px bei 100% Zoom (= "passt in den Container")
+const MIN_ZOOM = 1;
+const MAX_ZOOM = 10;
+
+// mapImg per Prozent-Breite zu zoomen (wie zuvor) ist zirkulär: mapInner ist
+// inline-block und zieht seine eigene Breite aus dem Bild, das Bild seine
+// Breite wiederum aus mapInner - das lösen Browser inkonsistent auf, wodurch
+// das tatsächlich gemalte Bild und die %-Positionen der Marker auseinander-
+// laufen (genau der gemeldete Bug: Marker nur bei bestimmten Zoomstufen an
+// der richtigen Stelle). Feste px-Breite macht die Referenz eindeutig.
+function applyZoomWidth() {
+  mapImg.style.width = Math.round(baseWidthPx * zoomLevel) + "px";
+}
+
+function resetZoom() {
+  baseWidthPx = mapWrap.clientWidth;
+  zoomLevel = 1;
+  applyZoomWidth();
+  zoomLabel.textContent = "100%";
+  mapWrap.scrollLeft = 0;
+  mapWrap.scrollTop = 0;
+}
+
+// Zoomt um focalClientX/Y herum (Viewport-Koordinaten), damit der Punkt
+// unter dem Cursor/Zentrum an derselben Stelle im sichtbaren Ausschnitt
+// bleibt statt beim Reinzoomen wegzuspringen.
+function zoomTo(newZoom, focalClientX, focalClientY) {
+  if (!mapImg.naturalWidth) return;
+  newZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, newZoom));
+  if (newZoom === zoomLevel) return;
+
+  const wrapRect = mapWrap.getBoundingClientRect();
+  const imgRect = mapImg.getBoundingClientRect();
+  const fracX = (focalClientX - imgRect.left) / imgRect.width;
+  const fracY = (focalClientY - imgRect.top) / imgRect.height;
+
+  zoomLevel = newZoom;
+  applyZoomWidth();
+  zoomLabel.textContent = Math.round(zoomLevel * 100) + "%";
+
+  const newImgWidth = mapImg.clientWidth;
+  const newImgHeight = mapImg.clientHeight;
+  mapWrap.scrollLeft = fracX * newImgWidth - (focalClientX - wrapRect.left);
+  mapWrap.scrollTop = fracY * newImgHeight - (focalClientY - wrapRect.top);
+}
+
+function zoomStep(factor) {
+  const wrapRect = mapWrap.getBoundingClientRect();
+  zoomTo(zoomLevel * factor, wrapRect.left + wrapRect.width / 2, wrapRect.top + wrapRect.height / 2);
+}
+
+document.getElementById("zoomInBtn").onclick = () => zoomStep(1.5);
+document.getElementById("zoomOutBtn").onclick = () => zoomStep(1 / 1.5);
+document.getElementById("zoomResetBtn").onclick = resetZoom;
+
+mapWrap.addEventListener("wheel", (e) => {
+  if (!mapImg.naturalWidth) return;
+  e.preventDefault();
+  const factor = e.deltaY < 0 ? 1.25 : 1 / 1.25;
+  zoomTo(zoomLevel * factor, e.clientX, e.clientY);
+}, { passive: false });
+
+function round3(v) {
+  return Math.round(v * 1000) / 1000;
+}
+
+function renderPoints() {
+  pointsBody.innerHTML = "";
+
+  mapInner.querySelectorAll(".marker:not(.pending)").forEach((m) => m.remove());
+
+  points.forEach((p, i) => {
+    const marker = document.createElement("div");
+    marker.className = "marker";
+    marker.style.left = (p.x * 100) + "%";
+    marker.style.top = (p.y * 100) + "%";
+    marker.textContent = i + 1;
+    mapInner.appendChild(marker);
+
+    const tr = document.createElement("tr");
+    const tdNum = document.createElement("td");
+    tdNum.textContent = i + 1;
+    const tdImg = document.createElement("td");
+    tdImg.textContent = p.image;
+    const tdX = document.createElement("td");
+    tdX.className = "num";
+    tdX.textContent = p.x;
+    const tdY = document.createElement("td");
+    tdY.className = "num";
+    tdY.textContent = p.y;
+
+    tr.append(tdNum, tdImg, tdX, tdY);
+    pointsBody.appendChild(tr);
+  });
+
+  outputArea.value = JSON.stringify(points, null, 2);
+}
+
+document.getElementById("copyBtn").onclick = async () => {
+  try {
+    await navigator.clipboard.writeText(outputArea.value);
+    setStatus("JSON in die Zwischenablage kopiert.");
+  } catch (e) {
+    outputArea.select();
+    setStatus("Automatisches Kopieren nicht möglich - Text ist markiert, Strg+C nutzen.");
+  }
+};
+
+function setStatus(msg) {
+  statusEl.textContent = msg;
+}
+
+function setSaveStatus(msg, isError) {
+  saveStatusEl.textContent = msg;
+  saveStatusEl.style.color = isError ? "#f77" : "#7c7";
+}
+
+renderPoints();
+</script>
+</body>
+</html>
