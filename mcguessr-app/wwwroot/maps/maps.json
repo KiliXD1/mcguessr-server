@@ -1,0 +1,16 @@
+[
+  {
+    "id": "overworld",
+    "name": "Overworld",
+    "mapImage": "images/map.png",
+    "thumbnail": "images/map.png",
+    "locationsFile": "maps/overworld.json"
+  },
+  {
+    "id": "ca12",
+    "name": "ca12",
+    "mapImage": "images/ca12/map.png",
+    "thumbnail": "images/ca12/map.png",
+    "locationsFile": "maps/ca12.json"
+  }
+]

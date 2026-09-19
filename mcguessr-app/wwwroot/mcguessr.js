@@ -57,14 +57,8 @@ startBtn.onclick = () => {
   playerSkin.src = `https://minotar.net/helm/${name}/40.png`;
   playerNameEl.innerText = name;
 
-  round = 0;
-  totalScore = 0;
-
   startScreen.style.display = "none";
-  game.style.display = "block";
-
-  startTimer();
-  loadRandomLocation();
+  showMapSelect();
 };
 
   multiplayerBtn.onclick = () => {
@@ -121,65 +115,80 @@ let startX = 0;
 let startY = 0;
 const dragThreshold = 5;
 
-const locations = [
-  { image: "images/bild1.png", x: 0.504, y: 0.494 },
-  { image: "images/bild2.png", x: 0.557, y: 0.220 },
-  { image: "images/bild3.png", x: 0.123, y: 0.431 },
-  { image: "images/bild4.png", x: 0.303, y: 0.233 },
-  { image: "images/bild5.png", x: 0.781, y: 0.368 },
-  { image: "images/bild6.png", x: 0.325, y: 0.987 },
-  { image: "images/bild7.png", x: 0.565, y: 0.978 },
-  { image: "images/bild8.png", x: 0.760, y: 0.871 },
-  { image: "images/bild9.png", x: 0.936, y: 0.814 },
-  { image: "images/bild10.png", x: 0.264, y: 0.697 },
-  { image: "images/bild11.png", x: 0.458, y: 0.828 },
-  { image: "images/bild12.png", x: 0.423, y: 0.299 },
-  { image: "images/bild13.png", x: 0.665, y: 0.550 },
-  { image: "images/bild14.png", x: 0.864, y: 0.639 },
-  { image: "images/bild15.png", x: 0.371, y: 0.597 },
-  { image: "images/bild16.png", x: 0.178, y: 0.825 },
-  { image: "images/bild17.png", x: 0.471, y: 0.456 },
-  { image: "images/bild18.png", x: 0.167, y: 0.321 },
-  { image: "images/bild19.png", x: 0.653, y: 0.289 },
-  { image: "images/bild20.png", x: 0.520, y: 0.040 },
-  { image: "images/bild21.png", x: 0.479, y: 0.138 },
-  { image: "images/bild22.png", x: 0.330, y: 0.071 },
-  { image: "images/bild23.png", x: 0.208, y: 0.584 },
-  { image: "images/bild24.png", x: 0.849, y: 0.123 },
-  { image: "images/bild25.png", x: 0.926, y: 0.479 },
-  { image: "images/bild26.png", x: 0.059, y: 0.835 },
-  { image: "images/bild27.png", x: 0.087, y: 0.576 },
-  { image: "images/bild28.png", x: 0.314, y: 0.338 },
-  { image: "images/bild29.png", x: 0.319, y: 0.868 },
-  { image: "images/bild30.png", x: 0.643, y: 0.711 },
-  { image: "images/bild31.png", x: 0.456, y: 0.976 },
-  { image: "images/bild32.png", x: 0.716, y: 0.105 },
-  { image: "images/bild33.png", x: 0.475, y: 0.651 },
-  { image: "images/bild34.png", x: 0.401, y: 0.881 },
-  { image: "images/bild35.png", x: 0.184, y: 0.933 },
-  { image: "images/bild36.png", x: 0.052, y: 0.160 },
-  { image: "images/bild37.png", x: 0.808, y: 0.212 },
-  { image: "images/bild38.png", x: 0.087, y: 0.337 },
-  { image: "images/bild39.png", x: 0.588, y: 0.830 },
-  { image: "images/bild40.png", x: 0.254, y: 0.402 },
-  { image: "images/bild41.png", x: 0.082, y: 0.916 },
-  { image: "images/bild42.png", x: 0.246, y: 0.959 },
-  { image: "images/bild43.png", x: 0.860, y: 0.837 },
-  { image: "images/bild44.png", x: 0.030, y: 0.446 },
-  { image: "images/bild45.png", x: 0.208, y: 0.066 },
-  { image: "images/bild46.png", x: 0.052, y: 0.673 },
-  { image: "images/bild47.png", x: 0.929, y: 0.325 },
-  { image: "images/bild48.png", x: 0.822, y: 0.902 },
-  { image: "images/bild49.png", x: 0.794, y: 0.571 },
-  { image: "images/bild50.png", x: 0.442, y: 0.192 }
+// -------------------- MAPS / MODI --------------------
+// Jede Karte ist ein eigener Eintrag in maps/maps.json (Name, Kartenbild,
+// Datei mit den Locations) - ein neuer Modus braucht keinen Code mehr,
+// nur einen neuen Eintrag dort und eine eigene locations-Datei (siehe
+// tools/location-picker.html, um die x/y-Koordinaten schnell per Klick
+// auf die Karte zu erzeugen statt sie von Hand auszurechnen).
+const mapSelectScreen = document.getElementById("mapSelectScreen");
+const mapSelectList = document.getElementById("mapSelectList");
 
-];
-
+let availableMaps = [];
+let currentMapLocations = [];
 let currentLocation;
+
+async function loadMaps() {
+  try {
+    availableMaps = await fetch("maps/maps.json").then((r) => r.json());
+  } catch (e) {
+    console.error("Kartenliste konnte nicht geladen werden:", e);
+    availableMaps = [];
+  }
+}
+
+function showMapSelect() {
+  mapSelectList.innerHTML = "";
+
+  availableMaps.forEach((mapDef) => {
+    const card = document.createElement("button");
+    card.type = "button";
+    card.className = "map-card";
+
+    const thumb = document.createElement("img");
+    thumb.src = mapDef.thumbnail;
+    thumb.alt = mapDef.name;
+
+    const label = document.createElement("span");
+    label.textContent = mapDef.name;
+
+    card.append(thumb, label);
+    card.onclick = () => startWithMap(mapDef);
+    mapSelectList.appendChild(card);
+  });
+
+  mapSelectScreen.style.display = "flex";
+}
+
+document.getElementById("mapSelectBackBtn").onclick = () => {
+  mapSelectScreen.style.display = "none";
+  startScreen.style.display = "";
+};
+
+async function startWithMap(mapDef) {
+  try {
+    currentMapLocations = await fetch(mapDef.locationsFile).then((r) => r.json());
+  } catch (e) {
+    console.error("Locations für Karte konnten nicht geladen werden:", e);
+    alert("Diese Karte konnte nicht geladen werden.");
+    return;
+  }
+
+  map.src = mapDef.mapImage;
+
+  round = 0;
+  totalScore = 0;
+
+  mapSelectScreen.style.display = "none";
+  game.style.display = "block";
+
+  startTimer();
+  loadRandomLocation();
+}
 
 // -------------------- LOAD --------------------
 function loadRandomLocation() {
-  currentLocation = locations[Math.floor(Math.random() * locations.length)];
+  currentLocation = currentMapLocations[Math.floor(Math.random() * currentMapLocations.length)];
   screenshot.src = currentLocation.image;
   mapContainer.classList.remove("fullscreen");
 
@@ -546,7 +555,7 @@ async function loadLeaderboard() {
   // Wird sowohl auf dem Startbildschirm als auch auf dem Endscreen angezeigt -
   // beide Container tragen die Klasse "leaderboardList" und bekommen dieselben
   // Daten.
-  document.querySelectorAll(".leaderboardList").forEach((board) => renderLeaderboard(board, entries));
+  document.querySelectorAll(".leaderboardList").forEach((board) => renderLeaderboard(board, entries));y
 }
 
 const LEADERBOARD_SLOTS = 10;
@@ -589,6 +598,7 @@ function renderLeaderboard(board, entries) {
 }
 
 loadLeaderboard();
+loadMaps();
 
 // -------------------- ZOOM --------------------
 mapViewport.addEventListener("wheel", (e) => {

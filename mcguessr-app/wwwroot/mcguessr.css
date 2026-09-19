@@ -98,6 +98,86 @@ button:hover:before {
   z-index: -1;
 }
 
+/* Kartenauswahl - zwischen Username-Eingabe und Spielstart */
+#mapSelectScreen {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  background: url("images/screenshot.jpg") center/cover no-repeat;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  z-index: 500;
+  animation: fadeIn 0.4s ease;
+}
+
+#mapSelectScreen::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(8,10,20,0.65);
+  z-index: -1;
+}
+
+#mapSelectScreen h2 {
+  margin: 0;
+  font-family: "Press Start 2P", sans-serif;
+  font-size: 28px;
+  color: #fff;
+  text-shadow: 0 0 14px rgba(120,180,255,0.6), 3px 3px 0 rgba(0,0,0,0.6);
+}
+
+#mapSelectList {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 24px;
+  max-width: 900px;
+}
+
+.map-card {
+  all: unset;
+  cursor: pointer;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 220px;
+  padding: 16px;
+  background: linear-gradient(160deg, rgba(25,25,35,0.88), rgba(10,10,18,0.92));
+  border: 2px solid rgba(255,255,255,0.14);
+  border-radius: 16px;
+  color: #fff;
+  font-family: "Press Start 2P", sans-serif;
+  font-size: 13px;
+  text-align: center;
+  transition: transform 0.2s cubic-bezier(.22,1,.36,1), box-shadow 0.25s ease, border-color 0.2s ease;
+}
+
+.map-card img {
+  width: 100%;
+  height: 130px;
+  object-fit: cover;
+  border-radius: 10px;
+  image-rendering: pixelated;
+}
+
+.map-card:hover {
+  transform: translateY(-6px) scale(1.03);
+  border-color: rgba(143,184,255,0.6);
+  box-shadow: 0 14px 34px rgba(0,0,0,0.5);
+}
+
+#mapSelectBackBtn {
+  --bg: url("images/Button.jpg");
+  font-size: 16px;
+  padding: 0.9em 1.8em;
+}
+
 .hero {
   position: absolute;
   top: 6%;
@@ -705,6 +785,21 @@ button:hover:before {
 .bronze { background: linear-gradient(90deg, #cd7f3233, #cd7f3288); border: 1px solid #cd7f32; }
 
 @media (max-width: 768px) {
+  #mapSelectScreen h2 {
+    font-size: 18px;
+  }
+
+  #mapSelectList {
+    max-width: 100%;
+    padding: 0 16px;
+    box-sizing: border-box;
+  }
+
+  .map-card {
+    width: 100%;
+    max-width: 280px;
+  }
+
   #mapContainer.fullscreen #mapViewport {
     width: 95vw;
     height: 60vh;
