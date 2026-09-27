@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "mcguessr",
+      "runtimeExecutable": "dotnet",
+      "runtimeArgs": ["run", "--project", "mcguessr-app"],
+      "port": 5000
+    }
+  ]
+}

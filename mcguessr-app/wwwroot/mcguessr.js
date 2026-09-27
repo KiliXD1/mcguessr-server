@@ -36,13 +36,52 @@ document.getElementById("backBtn").onclick = () => {
   totalScore = 0;
 };
 
+// Runde jederzeit abbrechen - Timer stoppen und zurück ins Menü, ohne den
+// Score zu speichern (kein sendScore-Aufruf, kein Leaderboard-Eintrag).
+document.getElementById("quitBtn").onclick = () => {
+  clearInterval(timerInterval);
+  mapContainer.classList.remove("fullscreen");
+
+  game.style.display = "none";
+  startScreen.style.display = "";
+
+  round = 0;
+  totalScore = 0;
+
+  AudioManager.resetForNewRound();
+};
+
 //Skin
-usernameInput.addEventListener("input", () => {
-  const name = usernameInput.value.trim();
+const resetUsernameBtn = document.getElementById("resetUsernameBtn");
+const USERNAME_STORAGE_KEY = "mcguessr.username";
 
+function updateSkinPreview(name) {
   if (!name) return;
+  skinPreview.src = `https://minotar.net/helm/${name}/100.png`;
+}
 
-skinPreview.src = `https://minotar.net/helm/${name}/100.png`;});
+usernameInput.addEventListener("input", () => {
+  updateSkinPreview(usernameInput.value.trim());
+});
+
+// Einmal festgelegter Name wird gespeichert und beim nächsten Besuch
+// automatisch wieder eingetragen.
+resetUsernameBtn.onclick = () => {
+  try { localStorage.removeItem(USERNAME_STORAGE_KEY); } catch (e) {}
+  usernameInput.value = "";
+  resetUsernameBtn.style.display = "none";
+  skinPreview.src = "images/default-skin.webp";
+  usernameInput.focus();
+};
+
+try {
+  const savedUsername = localStorage.getItem(USERNAME_STORAGE_KEY);
+  if (savedUsername) {
+    usernameInput.value = savedUsername;
+    resetUsernameBtn.style.display = "block";
+    updateSkinPreview(savedUsername);
+  }
+} catch (e) { /* localStorage evtl. nicht verfügbar */ }
 
 startBtn.onclick = () => {
   const name = usernameInput.value.trim();
@@ -53,6 +92,9 @@ startBtn.onclick = () => {
   }
 
   playerName = name;
+
+  try { localStorage.setItem(USERNAME_STORAGE_KEY, name); } catch (e) {}
+  resetUsernameBtn.style.display = "block";
 
   playerSkin.src = `https://minotar.net/helm/${name}/40.png`;
   playerNameEl.innerText = name;
@@ -75,9 +117,27 @@ document.getElementById("popupCloseBtn").onclick = function () {
   document.getElementById("popup").style.display = "none";
 };
 
-let maxTime = 30;
+// -------------------- EINSTELLUNGEN (Audio) --------------------
+const settingsBtn = document.getElementById("settingsBtn");
+const settingsPanel = document.getElementById("settingsPanel");
+const musicVolumeSlider = document.getElementById("musicVolumeSlider");
+const sfxVolumeSlider = document.getElementById("sfxVolumeSlider");
+
+musicVolumeSlider.value = Math.round(AudioManager.getMusicVolume() * 100);
+sfxVolumeSlider.value = Math.round(AudioManager.getSfxVolume() * 100);
+
+settingsBtn.onclick = () => { settingsPanel.style.display = "block"; };
+document.getElementById("settingsCloseBtn").onclick = () => { settingsPanel.style.display = "none"; };
+
+musicVolumeSlider.oninput = () => AudioManager.setMusicVolume(musicVolumeSlider.value / 100);
+sfxVolumeSlider.oninput = () => AudioManager.setSfxVolume(sfxVolumeSlider.value / 100);
+
+AudioManager.startMusic();
+
+let maxTime = 60;
 let timeLeft = maxTime;
 let timerInterval;
+let lowTimeTriggered = false; // pro Runde einmalig: Musikwechsel + Warnsound
 
 let guessX = null;
 let guessY = null;
@@ -192,6 +252,8 @@ function loadRandomLocation() {
   screenshot.src = currentLocation.image;
   mapContainer.classList.remove("fullscreen");
 
+  AudioManager.playSfx("impact");
+
   // Marker reset
   marker.style.display = "none";
   realMarker.style.display = "none";
@@ -202,6 +264,8 @@ function loadRandomLocation() {
 
   guessX = null;
   guessY = null;
+  lowTimeTriggered = false;
+  AudioManager.resetForNewRound();
 
   // MAP RESET
   zoom = 0.9;
@@ -332,11 +396,20 @@ function updateTransform() {
     offsetY = vpHeight / 2 - centerOnY * mapHeight;
   }
 
-  const minX = vpWidth - mapWidth;
-  const minY = vpHeight - mapHeight;
+  // Wie im echten GeoGuessr: über den Kartenrand hinaus scrollen können, bis
+  // die äußerste Ecke der Karte in der Mitte des Viewports liegt. Der
+  // überstehende Rand bleibt leer/transparent (Viewport-Hintergrund scheint
+  // durch), damit auch Orte direkt am Kartenrand mittig getippt werden können.
+  const overscrollX = vpWidth / 2;
+  const overscrollY = vpHeight / 2;
 
-  offsetX = Math.min(0, Math.max(offsetX, minX));
-  offsetY = Math.min(0, Math.max(offsetY, minY));
+  const minX = vpWidth - mapWidth - overscrollX;
+  const maxX = overscrollX;
+  const minY = vpHeight - mapHeight - overscrollY;
+  const maxY = overscrollY;
+
+  offsetX = Math.min(maxX, Math.max(offsetX, minX));
+  offsetY = Math.min(maxY, Math.max(offsetY, minY));
 
   mapWrapper.style.transform =
     `translate(${offsetX}px, ${offsetY}px) scale(${zoom})`;
@@ -365,8 +438,10 @@ mapViewport.addEventListener("click", (e) => {
 
   const rect = map.getBoundingClientRect();
 
-  const x = (e.clientX - rect.left) / rect.width;
-  const y = (e.clientY - rect.top) / rect.height;
+  // Ein Klick im transparenten Überstand (außerhalb der eigentlichen Karte)
+  // wird auf den nächstgelegenen Kartenrand geklemmt.
+  const x = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+  const y = Math.min(1, Math.max(0, (e.clientY - rect.top) / rect.height));
 
   guessX = x;
   guessY = y;
@@ -395,9 +470,16 @@ function startTimer() {
   }, 1000);
 }
 
+const timerText = document.getElementById("timerText");
+
 function updateBossbar() {
   const percent = (timeLeft / maxTime) * 100;
   bossbarFill.style.width = percent + "%";
+
+  const clamped = Math.max(0, timeLeft);
+  const minutes = Math.floor(clamped / 60);
+  const seconds = clamped % 60;
+  timerText.textContent = `${minutes}:${String(seconds).padStart(2, "0")}`;
 
   // Farbwechsel
   if (percent > 50) {
@@ -407,35 +489,110 @@ function updateBossbar() {
   } else {
     bossbarFill.style.background = "red";
   }
+
+  // Einmal pro Runde, sobald die Zeit knapp wird (wie der Farbwechsel auf
+  // Rot): Rundenmusik geht leiser, Warnung legt sich kurz drüber, danach
+  // wieder lauter - kein kompletter Trackwechsel.
+  if (percent <= 20 && !lowTimeTriggered) {
+    lowTimeTriggered = true;
+    AudioManager.triggerLowTimeWarning();
+  }
 }
 
 function autoSubmit() {
   if (guessX === null) {
+    // Ohne Guess trotzdem als Runde zählen (0 Punkte) - sonst zählt round
+    // nie hoch und man bleibt für immer in Runde 1 hängen, wenn man nie
+    // klickt.
     result.innerText = "Not guessed!";
+    round++;
+
     setTimeout(() => {
-      loadRandomLocation();
+      mapContainer.classList.remove("fullscreen");
+      realMarker.style.display = "none";
+      line.style.display = "none";
+
+      if (round >= maxRounds) {
+        endGame();
+      } else {
+        loadRandomLocation();
+      }
     }, 1500);
     return;
   }
 
   guessBtn.click();
 }
-// -------------------- DRAG --------------------
-mapWrapper.addEventListener("mousedown", (e) => {
-  isDragging = true;
-  moved = false;
+// -------------------- DRAG + PINCH ZOOM (Pointer Events, Maus & Touch) --------------------
+// Alle aktiven Touch-/Maus-Zeiger, key = pointerId. Bei genau 2 aktiven Pointern
+// wird statt gedraggt gepincht (Zoom).
+const activePointers = new Map();
+let pinchStartDist = null;
+let pinchStartZoom = null;
+
+function getPinchMidpoint(rect) {
+  const pts = Array.from(activePointers.values());
+  return {
+    x: (pts[0].x + pts[1].x) / 2 - rect.left,
+    y: (pts[0].y + pts[1].y) / 2 - rect.top,
+  };
+}
+
+function getPinchDistance() {
+  const pts = Array.from(activePointers.values());
+  const dx = pts[0].x - pts[1].x;
+  const dy = pts[0].y - pts[1].y;
+  return Math.hypot(dx, dy);
+}
+
+mapWrapper.addEventListener("pointerdown", (e) => {
+  activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  // Manche Browser lehnen setPointerCapture in Edge-Cases ab (z.B. wenn die
+  // UA den Pointer noch nicht als aktiv kennt) - das darf Pan/Pinch nicht
+  // blockieren, daher hier defensiv try/catch statt den Fehler durchschlagen
+  // zu lassen.
+  try { mapWrapper.setPointerCapture(e.pointerId); } catch (err) {}
+
   centerOnX = null;
   centerOnY = null;
   fitBoundsX = null;
   fitBoundsY = null;
 
-  startX = e.clientX - offsetX;
-  startY = e.clientY - offsetY;
+  if (activePointers.size === 2) {
+    isDragging = false;
+    pinchStartDist = getPinchDistance();
+    pinchStartZoom = zoom;
+  } else if (activePointers.size === 1) {
+    isDragging = true;
+    moved = false;
+    startX = e.clientX - offsetX;
+    startY = e.clientY - offsetY;
+  }
 
   e.preventDefault();
 });
 
-window.addEventListener("mousemove", (e) => {
+window.addEventListener("pointermove", (e) => {
+  if (!activePointers.has(e.pointerId)) return;
+  activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+  if (activePointers.size === 2) {
+    const rect = mapViewport.getBoundingClientRect();
+    const mid = getPinchMidpoint(rect);
+    const dist = getPinchDistance();
+
+    const oldZoom = zoom;
+    zoom = pinchStartZoom * (dist / pinchStartDist);
+    zoom = Math.min(Math.max(zoom, 0.185), 5);
+
+    offsetX = mid.x - ((mid.x - offsetX) * (zoom / oldZoom));
+    offsetY = mid.y - ((mid.y - offsetY) * (zoom / oldZoom));
+
+    moved = true;
+    updateTransform();
+    return;
+  }
+
   if (!isDragging) return;
 
   const dx = e.clientX - startX;
@@ -451,9 +608,24 @@ window.addEventListener("mousemove", (e) => {
   updateTransform();
 });
 
-window.addEventListener("mouseup", () => {
-  isDragging = false;
-});
+function endPointer(e) {
+  activePointers.delete(e.pointerId);
+
+  if (activePointers.size === 1) {
+    // Von Pinch zurück zu Drag mit dem verbleibenden Finger wechseln.
+    const remaining = Array.from(activePointers.values())[0];
+    isDragging = true;
+    startX = remaining.x - offsetX;
+    startY = remaining.y - offsetY;
+  } else if (activePointers.size === 0) {
+    isDragging = false;
+    pinchStartDist = null;
+    pinchStartZoom = null;
+  }
+}
+
+window.addEventListener("pointerup", endPointer);
+window.addEventListener("pointercancel", endPointer);
 
 // -------------------- SUBMIT --------------------
 guessBtn.onclick = () => {
@@ -475,6 +647,8 @@ guessBtn.onclick = () => {
 
   result.innerText =
     `Runde ${round}/3 | Punkte: ${score}`;
+
+AudioManager.playSfx("result");
 
 showResult();
 
@@ -555,7 +729,7 @@ async function loadLeaderboard() {
   // Wird sowohl auf dem Startbildschirm als auch auf dem Endscreen angezeigt -
   // beide Container tragen die Klasse "leaderboardList" und bekommen dieselben
   // Daten.
-  document.querySelectorAll(".leaderboardList").forEach((board) => renderLeaderboard(board, entries));y
+  document.querySelectorAll(".leaderboardList").forEach((board) => renderLeaderboard(board, entries));
 }
 
 const LEADERBOARD_SLOTS = 10;

@@ -4,12 +4,60 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Minecraft GeoGuessr</title>
+  <meta name="description" content="Minecraft GeoGuessr: Errate anhand von Minecraft-Screenshots, wo auf der Karte der Ort liegt. Kostenloses Browsergame im GeoGuessr-Stil mit Leaderboard - keine Installation nötig.">
+  <link rel="canonical" href="https://mcguessr.de/">
+
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Minecraft GeoGuessr">
+  <meta property="og:description" content="Errate anhand von Minecraft-Screenshots, wo auf der Karte der Ort liegt. Kostenloses Browsergame im GeoGuessr-Stil.">
+  <meta property="og:image" content="https://mcguessr.de/images/screenshot.jpg">
+  <meta property="og:url" content="https://mcguessr.de/">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Minecraft GeoGuessr">
+  <meta name="twitter:description" content="Errate anhand von Minecraft-Screenshots, wo auf der Karte der Ort liegt.">
+  <meta name="twitter:image" content="https://mcguessr.de/images/screenshot.jpg">
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="mcguessr.css">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "VideoGame",
+    "name": "Minecraft GeoGuessr",
+    "description": "Errate anhand von Minecraft-Screenshots, wo auf der Karte der Ort liegt - ein Browsergame im GeoGuessr-Stil.",
+    "genre": "Puzzle",
+    "gamePlatform": "Web Browser",
+    "applicationCategory": "Game",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "EUR"
+    }
+  }
+  </script>
 </head>
 <body>
+
+<!-- EINSTELLUNGEN (Lautstärke) - eigenständig, immer erreichbar egal welcher
+     Screen gerade aktiv ist -->
+<button id="settingsBtn" aria-label="Einstellungen">⚙</button>
+
+<div id="settingsPanel">
+  <h2>Einstellungen</h2>
+  <label for="musicVolumeSlider">Musik</label>
+  <input type="range" id="musicVolumeSlider" min="0" max="100" value="50">
+  <label for="sfxVolumeSlider">Soundeffekte</label>
+  <input type="range" id="sfxVolumeSlider" min="0" max="100" value="70">
+  <button id="settingsCloseBtn">Close</button>
+</div>
 
 <!-- START SCREEN -->
 <div id="startScreen">
@@ -20,12 +68,23 @@
     <h1>Minecraft GeoGuessr</h1>
   </div>
 
+  <!-- Für Suchmaschinen/Screenreader lesbar, optisch aber unsichtbar - reiner
+       Beschreibungstext, kein Design-Element, daher nicht Teil der UI. -->
+  <p class="sr-only">
+    Minecraft GeoGuessr ist ein kostenloses Browsergame im Stil von GeoGuessr:
+    du bekommst einen zufälligen Minecraft-Screenshot gezeigt und musst auf
+    einer Karte raten, wo dieser Ort liegt. Je näher dein Tipp, desto mehr
+    Punkte - mit Leaderboard, direkt im Browser spielbar, keine Installation
+    nötig.
+  </p>
+
   <div class="content">
     <!-- MENÜ -->
     <div id="titleBlock">
       <button id="startBtn">Singleplayer</button>
       <button id="multiplayerBtn">Multiplayer</button>
       <button id="wieBtn">How to Play</button>
+
       <div id="popup">
         <h2>How to Play</h2>
         <p>Errate den Standort im Minecraft-Screenshot auf der Karte. Je näher dein Tipp, desto mehr Punkte!</p>
@@ -34,7 +93,18 @@
       </div>
     </div>
 
-    <!-- Leaderboard + Spieler-Karte + Creator, jede Box in ihrer natürlichen Höhe -->
+    <!-- Eigener Bereich unten links, bewusst abseits von den Menü-Buttons -->
+    <div id="creator">
+      <img src="images/Profilbild.png" alt="Kilior" id="profilbild">
+      <span id="creatorLabel">The Creator</span>
+      <div class="creator-links">
+        <a href="https://www.youtube.com/@kilior-yt" target="_blank" class="social-link yt">YouTube</a>
+        <a href="https://www.twitch.tv/kilioryt" target="_blank" class="social-link twitch">Twitch</a>
+        <a href="https://discord.gg/wCfe2PkcW6" target="_blank" class="social-link discord">Discord</a>
+      </div>
+    </div>
+
+    <!-- Leaderboard + Spieler-Karte, jede Box in ihrer natürlichen Höhe -->
     <div class="right-col">
       <div id="leaderboardHome" class="card leaderboard-card">
         <h2>Leaderboard</h2>
@@ -44,16 +114,7 @@
       <div id="skinBlock" class="card">
         <img id="skinPreview" src="" alt="Skin">
         <input id="usernameInput" placeholder="Minecraft Username">
-      </div>
-
-      <div id="creator">
-        <img src="images/Profilbild.png" alt="Kilior" id="profilbild">
-        <span id="creatorLabel">The Creator</span>
-        <div class="creator-links">
-          <a href="https://www.youtube.com/@kilior-yt" target="_blank" class="social-link yt">YouTube</a>
-          <a href="https://www.twitch.tv/kilioryt" target="_blank" class="social-link twitch">Twitch</a>
-          <a href="https://discord.gg/wCfe2PkcW6" target="_blank" class="social-link discord">Discord</a>
-        </div>
+        <button id="resetUsernameBtn" type="button" style="display:none;">Nicht du? Namen ändern</button>
       </div>
     </div>
   </div>
@@ -80,10 +141,13 @@
     <span id="playerName"></span>
   </div>
 
+  <button id="quitBtn" aria-label="Runde verlassen">✕ Verlassen</button>
+
 
   <!-- Bossbar -->
   <div id="bossbar">
     <div id="bossbar-fill"></div>
+    <span id="timerText"></span>
   </div>
 
   <!-- Screenshot -->
@@ -122,6 +186,7 @@
   </div>
 </div>
 
+<script src="mcguessr-audio.js"></script>
 <script src="mcguessr.js"></script>
 </body>
 </html>
