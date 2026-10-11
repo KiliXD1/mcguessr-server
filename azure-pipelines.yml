@@ -1,0 +1,98 @@
+# Push auf den Branch "release" => bauen, veröffentlichen und auf den IIS-Server ausliefern.
+trigger:
+  branches:
+    include: [release]
+
+pr: none
+
+variables:
+  # Agent-Pool für Build (gehosteter Agent reicht).
+  - name: agentPool
+    value: Azure Pipelines
+  # Agent-Pool, in dem der Self-hosted-Agent auf dem IIS-Server läuft (Deploy).
+  - name: deployPool
+    value: Default
+  # Zielordner der IIS-Site. ANPASSEN auf den echten Pfad.
+  - name: sitePath
+    value: C:\inetpub\wwwroot\mcguessr\mcguessr.de
+  - name: siteUrl
+    value: https://mcguessr.de/
+
+stages:
+  - stage: Build
+    jobs:
+      - job: build
+        pool:
+          name: $(agentPool)
+        steps:
+          - task: UseDotNet@2
+            displayName: .NET 10 SDK
+            inputs:
+              packageType: sdk
+              version: 10.0.x
+
+          # Das Repo hat keine Tests, daher nur ein Build-Check.
+          - script: dotnet build mcguessr-app/McguesSr.csproj -c Release --nologo
+            displayName: Build
+
+          - script: dotnet publish mcguessr-app/McguesSr.csproj -c Release -o $(Build.ArtifactStagingDirectory)/publish --nologo
+            displayName: Veröffentlichen
+
+          - powershell: |
+              $ErrorActionPreference = 'Stop'
+              $www = Join-Path '$(Build.ArtifactStagingDirectory)' 'publish/wwwroot'
+              foreach ($f in 'index.html','mcguessr.js','mcguessr.css') {
+                if (-not (Test-Path (Join-Path $www $f))) { throw "wwwroot/$f fehlt" }
+              }
+            displayName: Prüfen, dass das Frontend vollständig ist
+
+          - publish: $(Build.ArtifactStagingDirectory)/publish
+            artifact: mcguessr
+
+  - stage: Deploy
+    dependsOn: Build
+    condition: succeeded()
+    jobs:
+      - deployment: iis
+        environment: mcguessr-production
+        pool:
+          name: $(deployPool)
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - download: current
+                  artifact: mcguessr
+
+                - powershell: |
+                    $ErrorActionPreference = 'Stop'
+                    $site = '$(sitePath)'
+                    $source = '$(Pipeline.Workspace)\mcguessr'
+                    New-Item -ItemType Directory -Force $site | Out-Null
+
+                    # app_offline.htm hält die App an und gibt die Dateien (u. a. die SQLite-DB) frei.
+                    $offline = Join-Path $site 'app_offline.htm'
+                    Set-Content $offline '<html><body><h1>McGuessr wird aktualisiert ...</h1></body></html>'
+                    Start-Sleep -Seconds 5
+
+                    try {
+                      # /MIR löscht Altes. Die Leaderboard-Datenbank und lokale Konfiguration bleiben unberührt.
+                      robocopy $source $site /MIR /NFL /NDL /NJH /NJS /NP `
+                        /XF app_offline.htm appsettings.Production.json leaderboard.db leaderboard.db-shm leaderboard.db-wal `
+                        /XD logs
+                      if ($LASTEXITCODE -ge 8) { throw "robocopy fehlgeschlagen ($LASTEXITCODE)" }
+                    }
+                    finally {
+                      Remove-Item $offline -Force -ErrorAction SilentlyContinue
+                    }
+                    exit 0
+                  displayName: Auf IIS ausliefern
+
+                - powershell: |
+                    $ErrorActionPreference = 'Stop'
+                    for ($i = 0; $i -lt 10; $i++) {
+                      try { if ((Invoke-WebRequest '$(siteUrl)' -UseBasicParsing -TimeoutSec 20).StatusCode -eq 200) { 'OK'; exit 0 } }
+                      catch { Start-Sleep -Seconds 6 }
+                    }
+                    throw '$(siteUrl) antwortet nicht mit 200.'
+                  displayName: Erreichbarkeit prüfen
