@@ -2,6 +2,18 @@ using McguesSr.Data;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddCors(options =>
+    options.AddDefaultPolicy(policy =>
+    {
+        var origins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
+        if (origins is { Length: > 0 })
+            policy.WithOrigins(origins);
+        else
+            policy.AllowAnyOrigin();
+        policy.AllowAnyHeader().AllowAnyMethod();
+    }));
+
 builder.Services.AddControllers()
     .AddJsonOptions(o => o.JsonSerializerOptions.PropertyNamingPolicy =
         System.Text.Json.JsonNamingPolicy.CamelCase);
@@ -27,6 +39,7 @@ if (!app.Environment.IsDevelopment())
     }));
 }
 
+app.UseCors();
 app.UseDefaultFiles();
 
 if (app.Environment.IsDevelopment())
