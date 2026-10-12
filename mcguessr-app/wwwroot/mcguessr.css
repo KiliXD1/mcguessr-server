@@ -198,7 +198,7 @@ button:hover:before {
 }
 
 #mapSelectBackBtn {
-  --bg: url("images/Button.jpg");
+  --bg: url("images/Button.webp");
   font-size: 16px;
   padding: 0.9em 1.8em;
 }
@@ -258,10 +258,37 @@ button:hover:before {
   position: absolute;
   top: 6%;
   right: 6%;
-  width: 560px;
+  /* Fluid statt fest: skaliert mit der Fensterbreite, damit sich links
+     (#titleBlock) und rechts (.right-col) bei mittleren Auflösungen
+     (Tablet/kleines Laptop-Fenster) nie überlappen können - siehe
+     Rechnung bei #titleBlock. */
+  width: min(560px, 38vw);
+  /* Ganze rechte Seite von oben bis unten (gleicher Rand wie oben), das
+     Leaderboard wächst in den freien Platz, die Skin-Karte bleibt unten. */
+  bottom: 6%;
   display: flex;
   flex-direction: column;
   gap: 26px;
+}
+
+/* Nur im Zwei-Spalten-Layout - gestapelte Ansicht siehe Media Query unten. */
+@media (min-width: 1151px) and (min-height: 851px) {
+  .right-col #leaderboardHome {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .right-col #leaderboardListHome {
+    flex: 1;
+    min-height: 0;
+    max-height: none;
+  }
+
+  .right-col #skinBlock {
+    flex-shrink: 0;
+  }
 }
 
 /* Creator-Credits als schmale Box statt einer eigenen großen Karte -
@@ -273,7 +300,7 @@ button:hover:before {
   position: absolute;
   left: 9%;
   bottom: 6%;
-  width: 560px;
+  width: min(560px, 82vw);
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -337,6 +364,15 @@ button:hover:before {
   height: 100vh;
   object-fit: cover;
   z-index: 0;
+  opacity: 1;
+  transition: opacity 0.12s ease;
+}
+
+/* Kurz während des Vorladens des nächsten Bildes - komplett ausblenden
+   (nicht nur dimmen), sonst schimmert das Bild der vorherigen Runde noch
+   durch. */
+#screenshot.fading {
+  opacity: 0;
 }
 
 #mapContainer {
@@ -347,8 +383,10 @@ button:hover:before {
 }
 
 #mapContainer:hover #mapViewport {
-  width: 800px;
-  height: 679px;
+  /* Fluid statt fest, damit die vergrößerte Vorschau bei jeder Fenster-
+     größe (auch kurz/schmal) innerhalb des Viewports bleibt. */
+  width: min(800px, 90vw);
+  height: min(679px, 75vh);
 }
 
 #mapViewport {
@@ -501,8 +539,11 @@ button:hover:before {
 }
 
 #mapContainer.fullscreen #mapViewport {
-  width: 900px; 
-  height: 760px;  
+  /* Fluid statt fest, damit die Ergebnis-Karte bei jeder Fenstergröße
+     (auch kurz/schmal) komplett sichtbar bleibt statt oben/unten
+     abgeschnitten zu werden. */
+  width: min(900px, 92vw);
+  height: min(760px, 80vh);
 }
 
 #playerUI {
@@ -512,33 +553,83 @@ button:hover:before {
   z-index: 20;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 18px;
+  background: linear-gradient(160deg, rgba(25,25,35,0.88), rgba(10,10,18,0.92));
+  border: 2px solid rgba(255,255,255,0.14);
+  border-radius: 16px;
+  padding: 14px 24px 14px 14px;
+  box-shadow: 0 10px 26px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.08);
 }
 
 /* Runde jederzeit abbrechen können - kein Score wird dabei gespeichert. */
 #quitBtn {
-  --bg: url("images/Button.jpg");
   position: fixed;
   top: 20px;
   right: 20px;
   z-index: 20;
-  font-size: 12px;
-  padding: 0.7em 1.1em;
+  font-size: 16px;
+  padding: 0.9em 1.3em;
+  /* Gleiche Bordüre/Schrift/Hover-Sprache wie alle anderen Buttons, nur mit
+     einfarbigem statt fotografischem Hintergrund - kein Erde-Motiv, aber
+     konsistent zum Rest der UI. */
+  background: linear-gradient(135deg, #4a3aa8, #201748);
 }
 
 #playerSkin {
-  width: 100px;
+  width: 88px;
   image-rendering: pixelated;
+  border-radius: 10px;
+}
+
+#playerInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+#playerName {
+  font-family: "Press Start 2P", sans-serif;
+  font-size: 30px;
+  color: #fff;
+  text-shadow: 0 0 12px rgba(120,180,255,0.5), 2px 2px 0 rgba(0,0,0,0.6);
+  line-height: 1;
+  display: block;
+  max-width: 340px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#gameStats {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-family: "Press Start 2P", sans-serif;
+  font-size: 17px;
+  color: #ffe9a8;
+  text-shadow: 0 0 8px rgba(255,215,110,0.35);
+  white-space: nowrap;
+}
+
+#gameStats #scoreIndicator {
+  color: rgba(255,255,255,0.75);
+  text-shadow: none;
 }
 
 /* Wie im Original: nah am linken Rand, vertikal zentriert, statt in einer
-   zentrierten Box neben dem Rest zu schweben. */
+   zentrierten Box neben dem Rest zu schweben. Passt bei ausreichender Höhe
+   (siehe Media Query weiter unten) immer sauber zwischen Hero-Logo oben und
+   Creator-Box unten - bei geringerer Höhe (z.B. 1366x768) reicht der Platz
+   dafür grundsätzlich nicht, dort greift dann die gestapelte Ansicht. */
 #titleBlock {
   position: absolute;
   top: 50%;
   left: 9%;
   transform: translateY(-50%);
-  width: 560px;
+  /* Fluid statt fest, siehe .right-col: mit left:9% + right:6% + je 38vw
+     bleibt bei jeder Breite >=769px (darunter greift die Stack-Ansicht in
+     der Media Query) ein Sicherheitsabstand zwischen beiden Spalten. */
+  width: min(560px, 38vw);
   display: flex;
   flex-direction: column;
   gap: 28px;
@@ -630,11 +721,18 @@ button:hover:before {
   padding: 20px 40px;
   border-radius: 12px;
 
-  z-index: 999;
+  /* Muss über der (fullscreen) Karte liegen, die nach dem Guess denselben
+     z-index nutzt - sonst verdeckt die Karte die Punktzahl teilweise. */
+  z-index: 1000;
   display: none;
 
   text-shadow: 0 0 20px rgba(0,0,0,0.8);
   animation: bigScorePop 0.7s cubic-bezier(.34,1.56,.64,1);
+}
+
+#bigScore .bigScoreMax {
+  color: rgba(255,255,255,0.45);
+  font-weight: normal;
 }
 
 @keyframes bigScorePop {
@@ -668,20 +766,32 @@ button:hover:before {
    restlichen Buttons (kein "all: unset" mehr) - nur klein und rund statt
    groß und rechteckig. */
 #settingsBtn {
-  --bg: url("images/Button.jpg");
   position: fixed;
   bottom: 20px;
   left: 20px;
   z-index: 2000;
-  width: 48px;
-  height: 48px;
+  width: 64px;
+  height: 64px;
   padding: 0;
   box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
+  font-size: 28px;
+  line-height: 1;
   border-radius: 50%;
+  /* Gleiche Bordüre/Schrift/Hover-Sprache wie alle anderen Buttons (siehe
+     "button" oben), nur mit einfarbigem statt fotografischem Hintergrund -
+     dadurch kein Erde-Motiv, aber trotzdem konsistent zum Rest der UI. */
+  background: linear-gradient(135deg, #4a3aa8, #201748);
+}
+
+/* Das ⚙-Glyph selbst sitzt in den meisten Fonts nicht mittig in seiner
+   eigenen Zeilenbox (kaum Unterlänge) - Flexbox zentriert nur die Box,
+   nicht die tatsächliche Tinte. Kleine Korrektur von Hand. */
+#settingsBtn .settingsIcon {
+  display: inline-block;
+  transform: translateY(-3px);
 }
 
 #settingsPanel {
@@ -792,11 +902,11 @@ button:hover:before {
 .social-link.twitch { background: linear-gradient(135deg, #9146ffcc, #6441a5cc); }
 .social-link.discord { background: linear-gradient(135deg, #5865f2cc, #404eedcc); }
 
-#startBtn { --bg: url("images/Button.jpg"); }
-#multiplayerBtn { --bg: url("images/Button-multi.png"); }
+#startBtn { --bg: url("images/Button.webp"); }
+#multiplayerBtn { --bg: url("images/Button-multi.webp"); }
 #wieBtn { --bg: url("images/Button-wie.jpg"); }
-#guessBtn { --bg: url("images/Button.jpg"); }
-#backBtn { --bg: url("images/Button.jpg"); }
+#guessBtn { --bg: url("images/Button.webp"); }
+#backBtn { --bg: url("images/Button.webp"); }
 
 #endScreen {
   position: fixed;
@@ -878,14 +988,86 @@ button:hover:before {
   animation: fadeIn 0.5s 0.5s ease backwards;
 }
 
-/* Immer exakt 10 Zeilen (siehe renderLeaderboard in mcguessr.js) - kein
-   Max-Height/Scroll mehr nötig, die Liste hat dadurch immer ihre volle,
-   gleichbleibende Größe. */
+.leaderboardTabs {
+  display: flex;
+  gap: 8px;
+  margin: 0 0 14px;
+}
+
+/* "all: unset" statt den globalen Button-Look (großes Padding, Foto-
+   Hintergrund, Hover-Lift) - die Tabs sollen klein und dezent bleiben,
+   wie schon bei .map-card/#resetUsernameBtn gehandhabt. */
+.lbTab::before {
+  content: none;
+}
+
+.lbTab {
+  all: unset;
+  flex: 1;
+  box-sizing: border-box;
+  cursor: pointer;
+  text-align: center;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-family: "Press Start 2P", sans-serif;
+  font-size: 10px;
+  color: rgba(255,255,255,0.55);
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.12);
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+/* Globalen button:hover/:active (Hochspringen, Skalieren, Glow) explizit
+   abschalten - die Tabs sollen nur ihre Farbe wechseln. */
+.lbTab:hover,
+.lbTab:active {
+  transform: none;
+  box-shadow: none;
+  color: rgba(255,255,255,0.85);
+  background: rgba(255,255,255,0.1);
+}
+
+.lbTab:active {
+  background: rgba(255,255,255,0.14);
+}
+
+.lbTab.active,
+.lbTab.active:hover,
+.lbTab.active:active {
+  color: #1a1a1a;
+  background: #ffe9a8;
+  border-color: #ffe9a8;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Immer exakt 10 Zeilen (siehe renderLeaderboard in mcguessr.js), dadurch
+   gleichbleibende Größe - aber 10 volle Zeilen sind zusammen mit der
+   Skin-Karte höher als ein normaler 1920x1080-Bildschirm (abzüglich
+   Taskleiste/Browser-Chrome), was die ganze Seite zum Scrollen zwingt.
+   Innerhalb der Liste scrollen statt die ganze Seite. */
 .leaderboardList {
   font-size: 20px;
   display: flex;
   flex-direction: column;
   gap: 8px;
+  max-height: 300px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.leaderboardList::-webkit-scrollbar {
+  width: 8px;
+}
+
+.leaderboardList::-webkit-scrollbar-track {
+  background: rgba(255,255,255,0.05);
+  border-radius: 4px;
+}
+
+.leaderboardList::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.25);
+  border-radius: 4px;
 }
 
 .lb-entry.lb-empty {
@@ -934,6 +1116,74 @@ button:hover:before {
 .silver { background: linear-gradient(90deg, #c0c0c033, #c0c0c088); border: 1px solid silver; }
 .bronze { background: linear-gradient(90deg, #cd7f3233, #cd7f3288); border: 1px solid #cd7f32; }
 
+/* Eigene, breitere Schwelle nur für das Zwei-Spalten-Layout des Start-
+   screens (Menü links, Leaderboard rechts): schon bei mittleren Fenster-
+   breiten (Tablet/kleines Laptop-Fenster) reicht der Platz nicht mehr
+   sicher für zwei nebeneinander liegende, absolut positionierte Spalten -
+   Buttons können umbrechen und mit der Creator-Box kollidieren. Bei
+   niedriger Höhe (kleines Fenster im Querformat) kollidiert die vertikal
+   zentrierte #titleBlock ebenfalls mit der unten verankerten #creator-Box,
+   unabhängig von der Breite - daher zusätzlich über die Höhe geschaltet.
+   Separat von der Mobile-Breakpoint-Regel unten, damit das Game-HUD davon
+   unberührt bleibt. */
+@media (max-width: 1150px), (max-height: 850px) {
+  .page,
+  .content {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .hero,
+  #titleBlock,
+  .right-col,
+  #creator {
+    position: static;
+    top: auto;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    transform: none;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .hero {
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+  }
+
+  .hero h1 {
+    white-space: normal;
+  }
+
+  /* .right-col ist auf Desktop nur ein Positionierungs-Wrapper für
+     Leaderboard + Skin-Karte. In der gestapelten Ansicht soll die
+     Reihenfolge aber Buttons -> Skin -> Leaderboard -> Creator sein, also
+     "display:contents": der Wrapper selbst verschwindet aus dem Layout,
+     seine Kinder werden zu direkten Flex-Items von .content und lassen
+     sich einzeln per order anordnen. */
+  .right-col {
+    display: contents;
+  }
+
+  #titleBlock { order: 1; }
+  #skinBlock { order: 2; }
+  #leaderboardHome { order: 3; }
+  #creator { order: 4; }
+
+  #creator {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .creator-links {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
+
 @media (max-width: 768px) {
   #mapSelectScreen h2 {
     font-size: 18px;
@@ -965,12 +1215,45 @@ button:hover:before {
     padding: 0.9em 1.2em;
   }
 
-  #playerSkin {
-    width: 50px;
+  #playerUI {
+    gap: 12px;
+    padding: 10px 14px 10px 10px;
   }
 
+  #playerSkin {
+    width: 54px;
+  }
+
+  #playerName {
+    font-size: 15px;
+    max-width: 150px;
+  }
+
+  /* Nur das X, "Verlassen" kostet auf schmalen Screens zu viel Platz neben
+     der jetzt größeren Spieler-Karte. */
+  #quitBtn {
+    padding: 0.6em 0.8em;
+  }
+
+  #quitBtn .quitBtnLabel {
+    display: none;
+  }
+
+  /* Nebeneinander wird auf schmalen Screens zu breit und stößt an den
+     "Verlassen"-Button - stattdessen untereinander stapeln. */
+  #gameStats {
+    flex-direction: column;
+    align-items: flex-start;
+    font-size: 10px;
+    gap: 4px;
+  }
+
+  /* Der Bossbar-Timer ist immer horizontal zentriert und würde die
+     Spieler-Karte oben links überlappen - auf schmalen Bildschirmen daher
+     unter die Karte setzen statt daneben. */
   #bossbar {
     width: 80%;
+    top: 104px;
   }
 
   #finalScore {
@@ -990,36 +1273,8 @@ button:hover:before {
     box-sizing: border-box;
   }
 
-  .page,
-  .content {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-  }
-
-  .hero,
-  #titleBlock,
-  .right-col,
-  #creator {
-    position: static;
-    top: auto;
-    left: auto;
-    right: auto;
-    bottom: auto;
-    transform: none;
-    width: 100%;
-    box-sizing: border-box;
-  }
-
-  .hero {
-    flex-direction: column;
-    gap: 10px;
-    text-align: center;
-  }
-
   .hero h1 {
     font-size: 18px;
-    white-space: normal;
   }
 
   .hero #Icon {
@@ -1029,16 +1284,6 @@ button:hover:before {
 
   #titleBlock, #skinBlock {
     max-width: 100%;
-  }
-
-  #creator {
-    flex-direction: column;
-    text-align: center;
-  }
-
-  .creator-links {
-    flex-wrap: wrap;
-    justify-content: center;
   }
 
   button {

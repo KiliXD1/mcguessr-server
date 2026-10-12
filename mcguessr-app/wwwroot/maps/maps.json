@@ -2,15 +2,15 @@
   {
     "id": "overworld",
     "name": "Overworld",
-    "mapImage": "images/map.png",
-    "thumbnail": "images/map.png",
+    "mapImage": "images/map.webp",
+    "thumbnail": "images/map-thumb.webp",
     "locationsFile": "maps/overworld.json"
   },
   {
     "id": "ca12",
-    "name": "ca12",
-    "mapImage": "images/ca12/map.png",
-    "thumbnail": "images/ca12/map.png",
+    "name": "Craft Attack 12",
+    "mapImage": "images/ca12/map.webp",
+    "thumbnail": "images/ca12/map-thumb.webp",
     "locationsFile": "maps/ca12.json"
   }
 ]

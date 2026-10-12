@@ -32,6 +32,22 @@ public partial class LeaderboardController(LeaderboardDbContext db) : Controller
         return Ok(top);
     }
 
+    // Gesamtpunktzahl pro Username über alle Runden/Spiele hinweg, statt nur
+    // der einzelnen besten Runde - eigener Endpoint, damit das Frontend
+    // zwischen beiden Ansichten umschalten kann.
+    [HttpGet("/leaderboard/alltime")]
+    public async Task<IActionResult> GetAllTime()
+    {
+        var top = await db.Entries
+            .GroupBy(e => e.Name)
+            .Select(g => new { Name = g.Key, Score = g.Sum(e => e.Score) })
+            .OrderByDescending(g => g.Score)
+            .Take(10)
+            .ToListAsync();
+
+        return Ok(top);
+    }
+
     [HttpPost("/leaderboard")]
     public async Task<IActionResult> Post([FromBody] LeaderboardSubmission submission)
     {

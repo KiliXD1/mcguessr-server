@@ -19,10 +19,22 @@ const usernameInput = document.getElementById("usernameInput");
 const skinPreview = document.getElementById("skinPreview");
 const playerSkin = document.getElementById("playerSkin");
 const playerNameEl = document.getElementById("playerName");
+const roundIndicator = document.getElementById("roundIndicator");
+const scoreIndicator = document.getElementById("scoreIndicator");
 let round = 0;
 let totalScore = 0;
 const maxRounds = 3;
+const MAX_SCORE_PER_ROUND = 5000;
 let playerName = "";
+
+// Runden-/Punkteanzeige oben links neben Kopf+Name aktuell halten.
+function updateRoundIndicator() {
+  roundIndicator.innerText = `Runde ${Math.min(round + 1, maxRounds)}/${maxRounds}`;
+}
+
+function updateScoreIndicator() {
+  scoreIndicator.innerText = `${totalScore}/${maxRounds * MAX_SCORE_PER_ROUND}`;
+}
 
   skinPreview.src = "images/default-skin.webp";
 
@@ -234,10 +246,16 @@ async function startWithMap(mapDef) {
     return;
   }
 
+  // Die Karte (mehrere MB) ist erst für den Tipp nötig, das Screenshot-Bild
+  // der ersten Runde hat beim Laden Vorrang.
+  map.fetchPriority = "low";
   map.src = mapDef.mapImage;
 
   round = 0;
   totalScore = 0;
+  recentLocations = [];
+  upcomingLocation = null;
+  prefetchImage = null;
 
   mapSelectScreen.style.display = "none";
   game.style.display = "block";
@@ -247,9 +265,80 @@ async function startWithMap(mapDef) {
 }
 
 // -------------------- LOAD --------------------
+// Die letzten gezeigten Orte der aktuellen Karte merken, damit nicht
+// dieselben Screenshots kurz hintereinander wiederkommen - muss nicht erst
+// die komplette Liste durch sein, nur die letzten RECENT_HISTORY_SIZE
+// werden vermieden.
+const RECENT_HISTORY_SIZE = 10;
+let recentLocations = [];
+
+function pickNextLocation() {
+  let candidates = currentMapLocations.filter((loc) => !recentLocations.includes(loc));
+
+  // Karte hat weniger Orte als die History-Größe - dann wenigstens den
+  // zuletzt gezeigten nicht direkt nochmal ziehen.
+  if (candidates.length === 0) {
+    candidates = currentMapLocations.filter((loc) => loc !== currentLocation);
+  }
+  if (candidates.length === 0) {
+    candidates = currentMapLocations;
+  }
+
+  const picked = candidates[Math.floor(Math.random() * candidates.length)];
+
+  recentLocations.push(picked);
+  if (recentLocations.length > RECENT_HISTORY_SIZE) {
+    recentLocations.shift();
+  }
+
+  return picked;
+}
+
+// Der Ort der übernächsten Runde wird schon während der aktuellen gezogen
+// und sein Bild im Hintergrund in den Browser-Cache geladen - dadurch ist
+// der Rundenwechsel praktisch sofort da. Referenz wird gehalten, damit der
+// Browser den Download nicht vorzeitig verwirft.
+let upcomingLocation = null;
+let prefetchImage = null;
+
+function prefetchUpcomingLocation() {
+  upcomingLocation = pickNextLocation();
+  prefetchImage = new Image();
+  prefetchImage.src = upcomingLocation.image;
+}
+
 function loadRandomLocation() {
-  currentLocation = currentMapLocations[Math.floor(Math.random() * currentMapLocations.length)];
-  screenshot.src = currentLocation.image;
+  currentLocation = upcomingLocation ?? pickNextLocation();
+  upcomingLocation = null;
+
+  // Bild vorladen und per kurzem Fade wechseln statt hart umzuschneiden -
+  // dadurch fällt der Laderuckler bei großen Bildern nicht mehr auf und
+  // der Wechsel wirkt weich statt abrupt. Während des Ladens komplett
+  // ausblenden (nicht nur dimmen), sonst sieht man kurz noch das Bild der
+  // vorherigen Runde durchscheinen.
+  const nextImageSrc = currentLocation.image;
+  const preload = new Image();
+  const showNextImage = () => {
+    screenshot.src = nextImageSrc;
+    screenshot.classList.remove("fading");
+
+    // Erst nach dem aktuellen Bild das nächste vorladen, damit beide Downloads
+    // sich nicht gegenseitig ausbremsen.
+    if (round + 1 < maxRounds) prefetchUpcomingLocation();
+  };
+  preload.onload = showNextImage;
+  preload.onerror = showNextImage;
+  screenshot.classList.add("fading");
+  preload.src = nextImageSrc;
+
+  // Punktzahl-Popup der letzten Runde ausblenden, sonst bleibt sie bis zum
+  // nächsten Guess sichtbar stehen.
+  bigScore.style.display = "none";
+  result.innerText = "";
+
+  updateRoundIndicator();
+  updateScoreIndicator();
+
   mapContainer.classList.remove("fullscreen");
 
   AudioManager.playSfx("impact");
@@ -640,19 +729,20 @@ guessBtn.onclick = () => {
   const dy = guessY - currentLocation.y;
 
   const distance = Math.sqrt(dx * dx + dy * dy);
-  const score = Math.max(0, 5000 - Math.floor(distance * 5000));
+  const score = Math.max(0, MAX_SCORE_PER_ROUND - Math.floor(distance * MAX_SCORE_PER_ROUND));
 
   totalScore += score;
   round++;
+  updateScoreIndicator();
 
   result.innerText =
-    `Runde ${round}/3 | Punkte: ${score}`;
+    `Runde ${round}/${maxRounds} | Punkte: ${score}`;
 
 AudioManager.playSfx("result");
 
 showResult();
 
-bigScore.innerText = "+" + score;
+bigScore.innerHTML = `${score}<span class="bigScoreMax">/${MAX_SCORE_PER_ROUND}</span>`;
 bigScore.style.display = "block";
 
 setTimeout(() => {
@@ -716,21 +806,52 @@ async function sendScore(name, score) {
   }
 }
 
-async function loadLeaderboard() {
-  let entries;
+// "top" = beste Einzelrunden, "alltime" = pro Username aufsummierte
+// Gesamtpunktzahl über alle Runden/Spiele hinweg (eigener Server-Endpoint).
+const LEADERBOARD_ENDPOINTS = {
+  top: "/leaderboard",
+  alltime: "/leaderboard/alltime",
+};
+
+async function loadLeaderboardInto(listEl, mode) {
+  let entries = [];
   try {
-    const res = await fetch("/leaderboard");
+    const res = await fetch(LEADERBOARD_ENDPOINTS[mode] ?? LEADERBOARD_ENDPOINTS.top);
     entries = await res.json();
   } catch (e) {
     console.error("Leaderboard konnte nicht geladen werden:", e);
-    return;
   }
 
-  // Wird sowohl auf dem Startbildschirm als auch auf dem Endscreen angezeigt -
-  // beide Container tragen die Klasse "leaderboardList" und bekommen dieselben
-  // Daten.
-  document.querySelectorAll(".leaderboardList").forEach((board) => renderLeaderboard(board, entries));
+  renderLeaderboard(listEl, entries);
 }
+
+// Wird sowohl auf dem Startbildschirm als auch auf dem Endscreen angezeigt -
+// beide Karten tragen die Klasse "leaderboard-card" und sind unabhängig
+// voneinander zwischen Bestrunden/Gesamt umschaltbar.
+function loadLeaderboard() {
+  document.querySelectorAll(".leaderboard-card").forEach((card) => {
+    const activeTab = card.querySelector(".lbTab.active") ?? card.querySelector(".lbTab");
+    const listEl = card.querySelector(".leaderboardList");
+    loadLeaderboardInto(listEl, activeTab?.dataset.mode ?? "top");
+  });
+}
+
+// Tabs pro Karte verdrahten: Klick wechselt nur die Daten dieser einen Karte,
+// die andere (Start-/Endscreen) bleibt unberührt.
+document.querySelectorAll(".leaderboard-card").forEach((card) => {
+  const tabs = card.querySelectorAll(".lbTab");
+  const listEl = card.querySelector(".leaderboardList");
+
+  tabs.forEach((tab) => {
+    tab.addEventListener("click", () => {
+      if (tab.classList.contains("active")) return;
+
+      tabs.forEach((t) => t.classList.remove("active"));
+      tab.classList.add("active");
+      loadLeaderboardInto(listEl, tab.dataset.mode);
+    });
+  });
+});
 
 const LEADERBOARD_SLOTS = 10;
 

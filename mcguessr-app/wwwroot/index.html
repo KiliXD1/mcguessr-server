@@ -48,7 +48,7 @@
 
 <!-- EINSTELLUNGEN (Lautstärke) - eigenständig, immer erreichbar egal welcher
      Screen gerade aktiv ist -->
-<button id="settingsBtn" aria-label="Einstellungen">⚙</button>
+<button id="settingsBtn" aria-label="Einstellungen"><span class="settingsIcon">⚙</span></button>
 
 <div id="settingsPanel">
   <h2>Einstellungen</h2>
@@ -64,8 +64,8 @@
 
  <div class="page">
   <div class="hero">
-    <img src="images/logo.png" alt="Earth" id="Icon">
-    <h1>Minecraft GeoGuessr</h1>
+    <img src="images/logo.webp" alt="Earth" id="Icon">
+    <h1>MCGuessr</h1>
   </div>
 
   <!-- Für Suchmaschinen/Screenreader lesbar, optisch aber unsichtbar - reiner
@@ -95,7 +95,7 @@
 
     <!-- Eigener Bereich unten links, bewusst abseits von den Menü-Buttons -->
     <div id="creator">
-      <img src="images/Profilbild.png" alt="Kilior" id="profilbild">
+      <img src="images/Profilbild.webp" alt="Kilior" id="profilbild">
       <span id="creatorLabel">The Creator</span>
       <div class="creator-links">
         <a href="https://www.youtube.com/@kilior-yt" target="_blank" class="social-link yt">YouTube</a>
@@ -108,6 +108,10 @@
     <div class="right-col">
       <div id="leaderboardHome" class="card leaderboard-card">
         <h2>Leaderboard</h2>
+        <div class="leaderboardTabs">
+          <button type="button" class="lbTab active" data-mode="top">Bestrunden</button>
+          <button type="button" class="lbTab" data-mode="alltime">Gesamt</button>
+        </div>
         <div id="leaderboardListHome" class="leaderboardList"></div>
       </div>
 
@@ -138,10 +142,16 @@
   <!-- PLAYER UI -->
   <div id="playerUI">
     <img id="playerSkin">
-    <span id="playerName"></span>
+    <div id="playerInfo">
+      <span id="playerName"></span>
+      <div id="gameStats">
+        <span id="roundIndicator"></span>
+        <span id="scoreIndicator"></span>
+      </div>
+    </div>
   </div>
 
-  <button id="quitBtn" aria-label="Runde verlassen">✕ Verlassen</button>
+  <button id="quitBtn" aria-label="Runde verlassen">✕ <span class="quitBtnLabel">Verlassen</span></button>
 
 
   <!-- Bossbar -->
@@ -157,7 +167,7 @@
   <div id="mapContainer">
     <div id="mapViewport">
       <div id="mapWrapper">
-        <img id="map" src="images/map.png">
+        <img id="map" alt="">
         <img id="marker" src="images/Map_X.png">
         <img id="realMarker" src="images/Map_real.png">
         <div id="line"></div>
@@ -180,6 +190,10 @@
     <div id="finalRank" style="display:none;"></div>
     <div id="leaderboardBox" class="card leaderboard-card">
       <h2>Leaderboard</h2>
+      <div class="leaderboardTabs">
+        <button type="button" class="lbTab active" data-mode="top">Bestrunden</button>
+        <button type="button" class="lbTab" data-mode="alltime">Gesamt</button>
+      </div>
       <div id="leaderboardListEnd" class="leaderboardList"></div>
     </div>
     <button id="backBtn">Zurück zum Menü</button>
