@@ -367,3 +367,9 @@ FodyWeavers.xsd
 *.db-shm
 *.db-wal
 /INCalc.App/incalc.db
+
+# PNG-Originale der Screenshots/Karten: nur lokal als Quelle für
+# scripts/optimize-images.py, ausgeliefert werden die .webp-Dateien.
+mcguessr-app/wwwroot/images/bild*.png
+mcguessr-app/wwwroot/images/map.png
+mcguessr-app/wwwroot/images/ca12/*.png
