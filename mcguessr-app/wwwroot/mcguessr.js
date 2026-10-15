@@ -340,6 +340,8 @@ function loadRandomLocation() {
   updateScoreIndicator();
 
   mapContainer.classList.remove("fullscreen");
+  // Handy: Karte pro Runde erst klein, per Tipp groß (siehe mapViewport-Click).
+  mapContainer.classList.toggle("collapsed", mobileMap.matches);
 
   AudioManager.playSfx("impact");
 
@@ -519,7 +521,21 @@ mapViewport.addEventListener("transitionend", (e) => {
 });
 
 // -------------------- CLICK (GUESS) --------------------
+// Auf dem Handy ist die Karte erst klein: Tippen vergrößert sie nur (setzt
+// noch keinen Tipp), der Button in der Ecke verkleinert sie wieder.
+const mobileMap = window.matchMedia("(max-width: 768px)");
+const mapShrinkBtn = document.getElementById("mapShrinkBtn");
+
+mapShrinkBtn.addEventListener("click", () => {
+  mapContainer.classList.add("collapsed");
+});
+
 mapViewport.addEventListener("click", (e) => {
+  if (mapContainer.classList.contains("collapsed")) {
+    mapContainer.classList.remove("collapsed");
+    return;
+  }
+
   if (moved) {
     moved = false;
     return;

@@ -7,10 +7,15 @@
   <meta name="description" content="Minecraft GeoGuessr: Errate anhand von Minecraft-Screenshots, wo auf der Karte der Ort liegt. Kostenloses Browsergame im GeoGuessr-Stil mit Leaderboard - keine Installation nötig.">
   <link rel="canonical" href="https://mcguessr.de/">
 
-  <link rel="icon" href="favicon.ico" sizes="any">
-  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
-  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="icon" href="favicon.ico?v=2" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=2">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png?v=2">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png?v=2">
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="theme-color" content="#14142a">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="MCGuessr">
 
   <meta property="og:type" content="website">
   <meta property="og:title" content="Minecraft GeoGuessr">
@@ -64,7 +69,7 @@
 
  <div class="page">
   <div class="hero">
-    <img src="images/logo.webp" alt="Earth" id="Icon">
+    <img src="images/logo.webp?v=2" alt="Earth" id="Icon">
     <h1>MCGuessr</h1>
   </div>
 
@@ -174,6 +179,8 @@
       </div>
     </div>
 
+    <button id="mapShrinkBtn" type="button" aria-label="Karte verkleinern">⤡</button>
+
     <button id="guessBtn">Guess</button>
   </div>
 
@@ -200,6 +207,11 @@
   </div>
 </div>
 
+<script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+  }
+</script>
 <script src="mcguessr-audio.js?v=20261012"></script>
 <script src="mcguessr.js?v=20261012"></script>
 </body>

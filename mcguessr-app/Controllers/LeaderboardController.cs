@@ -23,10 +23,13 @@ public partial class LeaderboardController(LeaderboardDbContext db) : Controller
     [HttpGet("/leaderboard")]
     public async Task<IActionResult> Get()
     {
+        // Jeder Spieler steht nur einmal drin, mit seinem besten Run - schlechtere
+        // Runs bleiben gespeichert (für "Gesamt"), tauchen hier aber nicht auf.
         var top = await db.Entries
-            .OrderByDescending(e => e.Score)
+            .GroupBy(e => e.Name)
+            .Select(g => new { Name = g.Key, Score = g.Max(e => e.Score) })
+            .OrderByDescending(g => g.Score)
             .Take(10)
-            .Select(e => new { e.Name, e.Score })
             .ToListAsync();
 
         return Ok(top);
@@ -62,9 +65,13 @@ public partial class LeaderboardController(LeaderboardDbContext db) : Controller
         db.Entries.Add(entry);
         await db.SaveChangesAsync();
 
-        // Platz unter allen Einträgen, nicht nur den Top 10 - damit auch
-        // Spieler außerhalb der Top 10 nach der Runde ihren Rang sehen.
-        var rank = await db.Entries.CountAsync(e => e.Score > entry.Score) + 1;
+        // Platz unter allen Spielern (nicht nur den Top 10), gemessen am besten
+        // Run des Spielers - ein schlechterer Run verschlechtert den Rang nicht.
+        var best = await db.Entries.Where(e => e.Name == name).MaxAsync(e => e.Score);
+        var rank = await db.Entries
+            .GroupBy(e => e.Name)
+            .Select(g => g.Max(e => e.Score))
+            .CountAsync(max => max > best) + 1;
 
         return Ok(new { rank });
     }

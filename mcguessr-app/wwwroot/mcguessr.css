@@ -123,15 +123,20 @@ button:hover:before {
   display: none;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  /* "safe": zentrieren, solange der Inhalt hineinpasst - sonst oben anfangen
+     statt oben und unten abgeschnitten zu werden (Handy). */
+  justify-content: safe center;
   gap: 28px;
   z-index: 500;
   animation: fadeIn 0.4s ease;
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding: 24px 0;
 }
 
 #mapSelectScreen::before {
   content: "";
-  position: absolute;
+  position: fixed;
   inset: 0;
   background: rgba(8,10,20,0.65);
   z-index: -1;
@@ -164,6 +169,7 @@ button:hover:before {
 
 .map-card {
   all: unset;
+  backface-visibility: hidden;
   cursor: pointer;
   box-sizing: border-box;
   display: flex;
@@ -187,14 +193,28 @@ button:hover:before {
   height: 280px;
   object-fit: cover;
   border-radius: 14px;
-  image-rendering: pixelated;
+  /* Vorschau ist ein verkleinertes Foto, kein Pixel-Sprite - "pixelated"
+     ließ die Kanten beim Hover-Skalieren flimmern. */
+  image-rendering: auto;
 }
 
-.map-card:hover {
-  color: #fff;
-  transform: translateY(-6px) scale(1.03);
-  border-color: rgba(143,184,255,0.6);
-  box-shadow: 0 14px 34px rgba(0,0,0,0.5);
+/* Hover nur vergrößern, nicht nach oben verschieben: wanderte die Karte beim
+   Hover nach oben, lag die Maus am unteren Rand plötzlich außerhalb, die
+   Karte fiel zurück, Maus wieder drauf - die Karte flackerte am Rand.
+   Skalieren um die Mitte vergrößert die Trefferfläche stattdessen nur. */
+@media (hover: hover) {
+  .map-card:hover {
+    color: #fff;
+    transform: scale(1.03);
+    border-color: rgba(143,184,255,0.6);
+    box-shadow: 0 14px 34px rgba(0,0,0,0.5);
+  }
+}
+
+/* Globales button:active (translateY + scale 0.9) abschalten. */
+.map-card:active {
+  transform: scale(0.99);
+  transition: transform 0.1s ease;
 }
 
 #mapSelectBackBtn {
@@ -382,11 +402,19 @@ button:hover:before {
   z-index: 10;
 }
 
-#mapContainer:hover #mapViewport {
-  /* Fluid statt fest, damit die vergrößerte Vorschau bei jeder Fenster-
-     größe (auch kurz/schmal) innerhalb des Viewports bleibt. */
-  width: min(800px, 90vw);
-  height: min(679px, 75vh);
+/* Nur bei echtem Hover (Maus) - auf Touch-Geräten bleibt :hover nach einem
+   Tipp hängen und würde die Karte ungewollt vergrößert lassen. */
+@media (hover: hover) {
+  #mapContainer:hover #mapViewport {
+    /* Fluid statt fest, damit die vergrößerte Vorschau bei jeder Fenster-
+       größe (auch kurz/schmal) innerhalb des Viewports bleibt. */
+    width: min(800px, 90vw);
+    height: min(679px, 75vh);
+  }
+}
+
+#mapShrinkBtn {
+  display: none;
 }
 
 #mapViewport {
@@ -1198,6 +1226,13 @@ button:hover:before {
   .map-card {
     width: 100%;
     max-width: 340px;
+    padding: 20px;
+    gap: 14px;
+    font-size: 16px;
+  }
+
+  .map-card img {
+    height: 170px;
   }
 
   #mapContainer.fullscreen #mapViewport {
@@ -1208,6 +1243,52 @@ button:hover:before {
   #mapViewport {
     width: 90vw;
     height: 50vh;
+  }
+
+  /* Erst klein, Tipp darauf vergrößert (siehe mcguessr.js). Der Wrapper
+     nimmt im kleinen Zustand keine Touches an, damit der Tipp den Viewport
+     erreicht statt die Karte zu verschieben. */
+  #mapContainer.collapsed:not(.fullscreen) #mapViewport {
+    width: 42vw;
+    height: 22vh;
+  }
+
+  #mapContainer.collapsed #mapWrapper {
+    pointer-events: none;
+  }
+
+  /* Im kleinen Zustand nur zeigen, wenn schon ein Tipp gesetzt ist. */
+  #mapContainer.collapsed #guessBtn:not(.ready) {
+    display: none;
+  }
+
+  #mapContainer:not(.collapsed):not(.fullscreen) #mapShrinkBtn {
+    display: flex;
+  }
+
+  #mapShrinkBtn {
+    all: unset;
+    display: none;
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 5;
+    width: 40px;
+    height: 40px;
+    box-sizing: border-box;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 20px;
+    line-height: 1;
+    color: #fff;
+    background: rgba(10,10,18,0.8);
+    border: 2px solid rgba(255,255,255,0.7);
+    border-radius: 10px;
+  }
+
+  #mapShrinkBtn::before {
+    content: none;
   }
 
   #guessBtn {
