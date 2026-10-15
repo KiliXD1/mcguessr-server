@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /tools/
 
-Sitemap: https://mcguessr.de/sitemap.xml
+Sitemap: https://www.mcguessr.de/sitemap.xml

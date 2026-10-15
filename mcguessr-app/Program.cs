@@ -39,6 +39,36 @@ if (!app.Environment.IsDevelopment())
     }));
 }
 
+// Immer https://www.mcguessr.de: http und die Variante ohne www leiten per 301
+// weiter (SEO: eine kanonische Adresse). Greift nur für die eigene Domain -
+// localhost und die Azure-Standardadresse bleiben unberührt. X-Forwarded-Proto
+// wird beachtet, damit hinter einem TLS-terminierenden Proxy keine
+// Weiterleitungsschleife entsteht.
+if (!app.Environment.IsDevelopment())
+{
+    app.Use(async (context, next) =>
+    {
+        var host = context.Request.Host.Host;
+        if (host.Equals("mcguessr.de", StringComparison.OrdinalIgnoreCase) ||
+            host.Equals("www.mcguessr.de", StringComparison.OrdinalIgnoreCase))
+        {
+            var forwardedHttps = string.Equals(
+                context.Request.Headers["X-Forwarded-Proto"].ToString(), "https",
+                StringComparison.OrdinalIgnoreCase);
+            var isHttps = context.Request.IsHttps || forwardedHttps;
+
+            if (!isHttps || !host.StartsWith("www.", StringComparison.OrdinalIgnoreCase))
+            {
+                var target = $"https://www.mcguessr.de{context.Request.PathBase}{context.Request.Path}{context.Request.QueryString}";
+                context.Response.Redirect(target, permanent: true);
+                return;
+            }
+        }
+
+        await next();
+    });
+}
+
 app.UseCors();
 app.UseDefaultFiles();
 
